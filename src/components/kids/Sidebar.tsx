@@ -6,7 +6,7 @@ import logoAsset from "@/assets/selamkids-logo.png.asset.json";
 const logoUrl = logoAsset.url;
 
 const navItems = [
-  { label: "Home", icon: Home, to: "/" as const },
+  { label: "Home", icon: Home, to: "/home" as const },
   { label: "Messages", icon: MessageCircle, to: "/messages" as const },
   { label: "My Library", icon: Library, to: "/library" as const },
   { label: "Kids Profile", icon: ShieldCheck, to: "/profile" as const },
@@ -27,7 +27,7 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-4 top-4 z-40 hidden h-[calc(100vh-2rem)] w-60 flex-col gap-6 rounded-4xl bg-sidebar p-5 shadow-[var(--shadow-soft)] lg:flex">
-      <Link to="/" className="flex items-center justify-center">
+      <Link to="/home" className="flex items-center justify-center">
         <img
           src={logoUrl}
           alt="Selam Kids logo"
@@ -90,7 +90,7 @@ export function MobileNav() {
 
 export function MobileHeader() {
   return (
-    <Link to="/" className="mb-4 flex items-center lg:hidden">
+    <Link to="/home" className="mb-4 flex items-center lg:hidden">
       <img src={logoUrl} alt="Selam Kids logo" className="h-10 w-auto rounded-xl" />
     </Link>
   );

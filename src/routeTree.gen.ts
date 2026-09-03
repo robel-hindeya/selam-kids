@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -18,6 +20,16 @@ import { Route as StorySlugRouteImport } from './routes/story.$slug'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibraryRoute = LibraryRouteImport.update({
@@ -43,6 +55,8 @@ const StorySlugRoute = StorySlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/home': typeof HomeRoute
   '/library': typeof LibraryRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
@@ -50,6 +64,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/home': typeof HomeRoute
   '/library': typeof LibraryRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
@@ -58,6 +74,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/home': typeof HomeRoute
   '/library': typeof LibraryRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
@@ -65,14 +83,38 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/library' | '/messages' | '/profile' | '/story/$slug'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/home'
+    | '/library'
+    | '/messages'
+    | '/profile'
+    | '/story/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/library' | '/messages' | '/profile' | '/story/$slug'
-  id: '__root__' | '/' | '/library' | '/messages' | '/profile' | '/story/$slug'
+  to:
+    | '/'
+    | '/auth'
+    | '/home'
+    | '/library'
+    | '/messages'
+    | '/profile'
+    | '/story/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/home'
+    | '/library'
+    | '/messages'
+    | '/profile'
+    | '/story/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  HomeRoute: typeof HomeRoute
   LibraryRoute: typeof LibraryRoute
   MessagesRoute: typeof MessagesRoute
   ProfileRoute: typeof ProfileRoute
@@ -86,6 +128,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/library': {
@@ -121,6 +177,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  HomeRoute: HomeRoute,
   LibraryRoute: LibraryRoute,
   MessagesRoute: MessagesRoute,
   ProfileRoute: ProfileRoute,
