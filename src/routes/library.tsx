@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { BookMarked, Clock, Heart } from "lucide-react";
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
@@ -60,13 +59,10 @@ const stats = [
 
 function LibraryPage() {
   const { isLoggedIn } = useAuth();
-  const [showLogin, setShowLogin] = useState(!isLoggedIn);
 
   return (
     <div className="relative min-h-screen bg-background p-4 pb-24 font-sans lg:p-8 lg:pb-8">
-      {!isLoggedIn && showLogin && (
-        <LoginModal onClose={() => setShowLogin(false)} onLogin={() => setShowLogin(false)} />
-      )}
+      {!isLoggedIn && <LoginModal />}
       <Sidebar />
       <main className="min-w-0 flex-1 lg:pl-72">
         <MobileHeader />

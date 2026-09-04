@@ -5,7 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 const logoUrl = logoAsset.url;
 
 interface LoginModalProps {
-    onClose: () => void;
+    /** Called only when user explicitly dismisses via the ✕ button */
+    onClose?: () => void;
+    /** Called after a successful social login */
     onLogin?: () => void;
 }
 
@@ -15,15 +17,17 @@ export function LoginModal({ onClose, onLogin }: LoginModalProps) {
     const handleLogin = () => {
         login();
         onLogin?.();
-        onClose();
     };
 
     return (
-        /* Backdrop */
+        /* Full-screen backdrop — NOT clickable to dismiss */
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", backgroundColor: "oklch(0.15 0.05 255 / 0.55)" }}
-            onClick={onClose}
+            style={{
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+                backgroundColor: "oklch(0.15 0.05 255 / 0.60)",
+            }}
         >
             {/* Card */}
             <div
@@ -34,16 +38,17 @@ export function LoginModal({ onClose, onLogin }: LoginModalProps) {
                     WebkitBackdropFilter: "blur(24px)",
                     border: "1px solid oklch(1 0 0 / 0.22)",
                 }}
-                onClick={(e) => e.stopPropagation()}
             >
-                {/* Close */}
-                <button
-                    aria-label="Close login"
-                    onClick={onClose}
-                    className="absolute right-4 top-4 grid size-8 place-items-center rounded-full bg-white/10 text-white/80 transition hover:bg-white/20"
-                >
-                    <X className="size-4" />
-                </button>
+                {/* Close button — only visible if onClose is provided */}
+                {onClose && (
+                    <button
+                        aria-label="Close login"
+                        onClick={onClose}
+                        className="absolute right-4 top-4 grid size-8 place-items-center rounded-full bg-white/10 text-white/80 transition hover:bg-white/20"
+                    >
+                        <X className="size-4" />
+                    </button>
+                )}
 
                 <div className="flex flex-col items-center text-center">
                     <img

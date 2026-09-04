@@ -39,7 +39,6 @@ const badges = [
 
 function ProfilePage() {
   const { isLoggedIn } = useAuth();
-  const [showLogin, setShowLogin] = useState(!isLoggedIn);
   const [points, setPoints] = useState(0);
   const [pop, setPop] = useState(false);
 
@@ -64,9 +63,7 @@ function ProfilePage() {
 
   return (
     <div className="relative min-h-screen bg-background p-4 pb-24 font-sans lg:p-8 lg:pb-8">
-      {!isLoggedIn && showLogin && (
-        <LoginModal onClose={() => setShowLogin(false)} onLogin={() => setShowLogin(false)} />
-      )}
+      {!isLoggedIn && <LoginModal />}
       <Sidebar />
       <main className="min-w-0 flex-1 lg:pl-72">
         <MobileHeader />
