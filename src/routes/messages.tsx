@@ -3,6 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { Heart, ImageUp, MessageCircle, Send, Smile } from "lucide-react";
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
+import { LoginModal } from "@/components/kids/LoginModal";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/messages")({
   head: () => ({
@@ -70,6 +72,8 @@ const sendTelegramFeedback = createServerFn({ method: "POST" })
   });
 
 function MessagesPage() {
+  const { isLoggedIn } = useAuth();
+  const [showLogin, setShowLogin] = useState(!isLoggedIn);
   const [sent, setSent] = useState<null | "message" | "feedback">(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageName, setImageName] = useState("");
@@ -91,7 +95,10 @@ function MessagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-24 font-sans lg:p-8 lg:pb-8">
+    <div className="relative min-h-screen bg-background p-4 pb-24 font-sans lg:p-8 lg:pb-8">
+      {!isLoggedIn && showLogin && (
+        <LoginModal onClose={() => setShowLogin(false)} onLogin={() => setShowLogin(false)} />
+      )}
       <Sidebar />
 
       <main className="min-w-0 flex-1 lg:pl-72">
