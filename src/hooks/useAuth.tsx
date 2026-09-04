@@ -2,6 +2,7 @@ import {
     createContext,
     useCallback,
     useContext,
+    useEffect,
     useState,
     type ReactNode,
 } from "react";
@@ -17,9 +18,12 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [isLoggedIn, setIsLoggedIn] = useState(
-        () => localStorage.getItem(AUTH_KEY) === "true",
-    );
+    // Start as false for SSR safety; hydrate from localStorage on the client.
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        setIsLoggedIn(localStorage.getItem(AUTH_KEY) === "true");
+    }, []);
 
     const login = useCallback(() => {
         localStorage.setItem(AUTH_KEY, "true");
@@ -32,11 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     return (
-        <AuthContext.Provider value= {{ isLoggedIn, login, logout }
-}>
-    { children }
-    </AuthContext.Provider>
-  );
+        <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
 }
 
 export function useAuth() {
