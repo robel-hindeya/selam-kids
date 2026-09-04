@@ -14,6 +14,7 @@ export type Story = {
   date: string;
   paragraphs: string[];
   funFact: string;
+  edition?: string;
 };
 
 export const stories: Story[] = [
@@ -27,6 +28,7 @@ export const stories: Story[] = [
     tint: "bg-grape/15",
     category: "Science",
     date: "Aug 26, 2025",
+    edition: "Aug 26, 2025",
     paragraphs: [
       "Space is a vast and mysterious place. It's filled with planets, stars, galaxies and so much more! Our solar system has 8 planets, and Earth is the only known place with life. Scientists are still discovering new things every day.",
       "One of the most amazing things about space is that it helps us understand our world better. By studying the stars and planets, we learn about the history of the universe and our place in it.",
@@ -44,6 +46,7 @@ export const stories: Story[] = [
     tint: "bg-secondary/30",
     category: "Animals",
     date: "Aug 20, 2025",
+    edition: "Sep 26, 2025",
     paragraphs: [
       "Dogs have lived with people for more than 15,000 years. They were the very first animal that humans became friends with, and they have been helping us ever since.",
       "Dogs can guide people who cannot see, sniff out things that are lost, and even tell when their human friend is feeling sad. A wagging tail is their way of saying hello!",
@@ -61,6 +64,7 @@ export const stories: Story[] = [
     tint: "bg-leaf/20",
     category: "Nature",
     date: "Aug 14, 2025",
+    edition: "Aug 14, 2025",
     paragraphs: [
       "Trees are like the lungs of our planet. They breathe in the air we breathe out and give back fresh oxygen for everyone — people, animals and even tiny bugs.",
       "Their roots hold the soil in place so rain does not wash it away, and their branches give homes to birds, squirrels and insects.",

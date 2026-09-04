@@ -38,6 +38,7 @@ const reading = [
     minutes: 5,
     likes: 254,
     tint: "bg-grape/15",
+    edition: "Aug 26, 2025",
   },
   {
     image: cardTrees,
@@ -47,12 +48,13 @@ const reading = [
     minutes: 4,
     likes: 143,
     tint: "bg-leaf/20",
+    edition: "Sep 26, 2025",
   },
 ];
 
 
 const stats = [
-  { label: "Books saved", value: 12, icon: BookMarked, tint: "bg-grape/15" },
+  { label: "Magazines saved", value: 12, icon: BookMarked, tint: "bg-grape/15" },
   { label: "Still reading", value: 2, icon: Clock, tint: "bg-secondary/30" },
   { label: "Favorites", value: 7, icon: Heart, tint: "bg-accent/20" },
 ];
@@ -95,7 +97,7 @@ function LibraryPage() {
         </header>
 
         <section className="mt-8">
-          <h2 className="font-display text-xl font-extrabold">Keep Reading</h2>
+          <h2 className="font-display text-xl font-extrabold">My Magazines</h2>
           <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {reading.map((s) => (
               <StoryCard key={s.slug} {...s} />
