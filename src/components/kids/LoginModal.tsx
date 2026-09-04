@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import logoAsset from "@/assets/selamkids-logo.png.asset.json";
+import logoAsset from "@/assets/selamkids-logo.png";
 import { useAuth } from "@/hooks/useAuth";
 
 const logoUrl = logoAsset.url;

@@ -38,7 +38,7 @@ const reading = [
     minutes: 5,
     likes: 254,
     tint: "bg-grape/15",
-    edition: "Aug 26, 2025",
+    edition: "Aug edition",
   },
   {
     image: cardTrees,
@@ -48,7 +48,7 @@ const reading = [
     minutes: 4,
     likes: 143,
     tint: "bg-leaf/20",
-    edition: "Sep 26, 2025",
+    edition: "Sep edition",
   },
 ];
 

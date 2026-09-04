@@ -1,10 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, MessageCircle, Library, ShieldCheck, Lock } from "lucide-react";
 import readerBoy from "@/assets/hero-reading.jpg";
-import logoAsset from "@/assets/selamkids-logo.png.asset.json";
 import { useAuth } from "@/hooks/useAuth";
 
-const logoUrl = logoAsset.url;
+const logoUrl = "/logo.jpg";
 
 const navItems = [
   { label: "Home", icon: Home, to: "/home" as const, protected: false },
@@ -85,10 +84,10 @@ export function MobileNav() {
             to={to}
             aria-label={label}
             className={`relative flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition-all ${active
-                ? "bg-primary text-primary-foreground scale-105"
-                : locked
-                  ? "text-muted-foreground/50 active:scale-95"
-                  : "text-muted-foreground active:scale-95"
+              ? "bg-primary text-primary-foreground scale-105"
+              : locked
+                ? "text-muted-foreground/50 active:scale-95"
+                : "text-muted-foreground active:scale-95"
               }`}
           >
             <Icon className="size-5" />
