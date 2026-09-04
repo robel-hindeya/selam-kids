@@ -3,7 +3,7 @@ import { Home, MessageCircle, Library, ShieldCheck, Lock } from "lucide-react";
 import readerBoy from "@/assets/hero-reading.jpg";
 import { useAuth } from "@/hooks/useAuth";
 
-const logoUrl = "/logo.jpg";
+import logoUrl from "@/assets/logo.jpg";
 
 const navItems = [
   { label: "Home", icon: Home, to: "/home" as const, protected: false },
@@ -45,9 +45,7 @@ export function Sidebar() {
           <Link key={label} to={to} className={itemClass(label, isProtected)}>
             <Icon className="size-5 transition-transform group-hover:scale-125 group-hover:-rotate-12" />
             {label}
-            {isProtected && !isLoggedIn && (
-              <Lock className="ml-auto size-3.5 opacity-50" />
-            )}
+            {isProtected && !isLoggedIn && <Lock className="ml-auto size-3.5 opacity-50" />}
           </Link>
         ))}
       </nav>
@@ -83,12 +81,13 @@ export function MobileNav() {
             key={label}
             to={to}
             aria-label={label}
-            className={`relative flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition-all ${active
-              ? "bg-primary text-primary-foreground scale-105"
-              : locked
-                ? "text-muted-foreground/50 active:scale-95"
-                : "text-muted-foreground active:scale-95"
-              }`}
+            className={`relative flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition-all ${
+              active
+                ? "bg-primary text-primary-foreground scale-105"
+                : locked
+                  ? "text-muted-foreground/50 active:scale-95"
+                  : "text-muted-foreground active:scale-95"
+            }`}
           >
             <Icon className="size-5" />
             <span className="truncate">{label}</span>

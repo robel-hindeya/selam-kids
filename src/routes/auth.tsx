@@ -56,7 +56,10 @@ function AuthPage() {
         </div>
 
         {/* Right side: blurred glass box */}
-        <div className="flex items-center justify-center bg-background/60 p-5 sm:p-8" style={{ backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
+        <div
+          className="flex items-center justify-center bg-background/60 p-5 sm:p-8"
+          style={{ backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}
+        >
           <div
             className="w-full max-w-md rounded-4xl p-8 shadow-[var(--shadow-card)]"
             style={{
@@ -67,11 +70,7 @@ function AuthPage() {
             }}
           >
             <div className="flex flex-col items-center text-center">
-              <img
-                src={logoUrl}
-                alt="Selam Kids logo"
-                className="h-14 w-auto rounded-2xl"
-              />
+              <img src={logoUrl} alt="Selam Kids logo" className="h-14 w-auto rounded-2xl" />
               <h2 className="mt-5 font-display text-3xl font-extrabold">Sign in</h2>
               <p className="mt-2 text-sm font-bold text-muted-foreground">
                 Choose how you'd like to continue
@@ -111,10 +110,22 @@ function AuthPage() {
 function GoogleIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-      <path d="M17.64 9.205c0-.638-.057-1.252-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z" fill="#4285F4" />
-      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18L12.048 13.562C11.247 14.101 10.22 14.418 9 14.418c-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853" />
-      <path d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A9.003 9.003 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05" />
-      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.346l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.96l3.007 2.332C4.672 5.165 6.656 3.58 9 3.58z" fill="#EA4335" />
+      <path
+        d="M17.64 9.205c0-.638-.057-1.252-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"
+        fill="#4285F4"
+      />
+      <path
+        d="M9 18c2.43 0 4.467-.806 5.956-2.18L12.048 13.562C11.247 14.101 10.22 14.418 9 14.418c-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"
+        fill="#34A853"
+      />
+      <path
+        d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A9.003 9.003 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M9 3.58c1.321 0 2.508.454 3.44 1.346l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.96l3.007 2.332C4.672 5.165 6.656 3.58 9 3.58z"
+        fill="#EA4335"
+      />
     </svg>
   );
 }

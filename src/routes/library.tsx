@@ -52,7 +52,6 @@ const reading = [
   },
 ];
 
-
 const stats = [
   { label: "Magazines saved", value: 12, icon: BookMarked, tint: "bg-grape/15" },
   { label: "Still reading", value: 2, icon: Clock, tint: "bg-secondary/30" },
@@ -104,7 +103,6 @@ function LibraryPage() {
             ))}
           </div>
         </section>
-
       </main>
       <MobileNav />
     </div>

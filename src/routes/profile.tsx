@@ -99,8 +99,9 @@ function ProfilePage() {
               </div>
             </div>
             <span
-              className={`font-display text-4xl font-extrabold text-primary transition-transform duration-300 ${pop ? "scale-125" : "scale-100"
-                }`}
+              className={`font-display text-4xl font-extrabold text-primary transition-transform duration-300 ${
+                pop ? "scale-125" : "scale-100"
+              }`}
             >
               {points}
             </span>

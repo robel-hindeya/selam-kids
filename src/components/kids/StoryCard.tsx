@@ -12,13 +12,18 @@ type Props = {
   edition?: string;
 };
 
-export function StoryCard({ image, title, description, minutes, likes, tint, slug, edition }: Props) {
+export function StoryCard({
+  image,
+  title,
+  description,
+  minutes,
+  likes,
+  tint,
+  slug,
+  edition,
+}: Props) {
   return (
-    <Link
-      to="/story/$slug"
-      params={{ slug }}
-      className="block focus:outline-none"
-    >
+    <Link to="/story/$slug" params={{ slug }} className="block focus:outline-none">
       <article className="group cursor-pointer overflow-hidden rounded-4xl bg-card shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-2 hover:rotate-1 hover:shadow-[var(--shadow-soft)]">
         <div className={`p-3 ${tint}`}>
           <img
@@ -29,7 +34,6 @@ export function StoryCard({ image, title, description, minutes, likes, tint, slu
             height={576}
             className="h-44 w-full rounded-3xl object-cover transition-transform duration-500 group-hover:scale-105"
           />
-
         </div>
         <div className="px-5 pb-5">
           <h3 className="font-display text-lg font-extrabold text-card-foreground">{title}</h3>

@@ -171,14 +171,22 @@ function MessagesPage() {
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) { setImagePreview(null); setImageName(""); return; }
+    if (!file) {
+      setImagePreview(null);
+      setImageName("");
+      return;
+    }
     setImagePreview(URL.createObjectURL(file));
     setImageName(file.name);
   };
 
   const handleDrawingImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) { setDrawingImagePreview(null); setDrawingImageName(""); return; }
+    if (!file) {
+      setDrawingImagePreview(null);
+      setDrawingImageName("");
+      return;
+    }
     setDrawingImagePreview(URL.createObjectURL(file));
     setDrawingImageName(file.name);
   };
@@ -195,7 +203,9 @@ function MessagesPage() {
           <span className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-1.5 text-xs font-bold text-primary">
             <MessageCircle className="size-4" /> Messages
           </span>
-          <h1 className="mt-3 font-display text-2xl font-extrabold sm:text-3xl">Say Hello to Little Read</h1>
+          <h1 className="mt-3 font-display text-2xl font-extrabold sm:text-3xl">
+            Say Hello to Little Read
+          </h1>
           <p className="mt-2 text-sm font-bold text-muted-foreground">
             Write us a message — and don&apos;t forget the family feedback at the end!
           </p>
@@ -203,7 +213,6 @@ function MessagesPage() {
 
         {/* ── Cards grid: 1 col on mobile, 2 col on lg ── */}
         <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-2">
-
           {/* ── Message to God ── */}
           <form
             onSubmit={(e) => {
@@ -219,15 +228,27 @@ function MessagesPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-display text-lg font-extrabold sm:text-xl">Message to God</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Upload an image, then write your big message.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Upload an image, then write your big message.
+                </p>
               </div>
-              <TelegramBtn onClick={() => { setTg1Open((v) => !v); setTg2Open(false); setTg3Open(false); }} />
+              <TelegramBtn
+                onClick={() => {
+                  setTg1Open((v) => !v);
+                  setTg2Open(false);
+                  setTg3Open(false);
+                }}
+              />
             </div>
             <TelegramBox
               open={tg1Open}
               text={tg1Text}
               onTextChange={setTg1Text}
-              onSend={() => { openTelegram(tg1Text); setTg1Text(""); setTg1Open(false); }}
+              onSend={() => {
+                openTelegram(tg1Text);
+                setTg1Text("");
+                setTg1Open(false);
+              }}
               onClose={() => setTg1Open(false)}
             />
 
@@ -236,19 +257,36 @@ function MessagesPage() {
                 className="flex min-h-40 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-primary/35 bg-primary/5 p-4 text-center transition hover:border-primary hover:bg-primary/10 sm:min-h-48"
                 aria-label="Upload image"
               >
-                <input type="file" accept="image/*" className="sr-only" onChange={handleImageChange} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handleImageChange}
+                />
                 {imagePreview ? (
-                  <img src={imagePreview} alt="Uploaded preview" className="h-36 w-full rounded-2xl object-cover sm:h-40" />
+                  <img
+                    src={imagePreview}
+                    alt="Uploaded preview"
+                    className="h-36 w-full rounded-2xl object-cover sm:h-40"
+                  />
                 ) : (
                   <>
                     <span className="flex size-14 items-center justify-center rounded-full bg-card text-primary shadow-[var(--shadow-soft)] sm:size-16">
                       <ImageUp className="size-7 sm:size-8" />
                     </span>
-                    <span className="mt-3 font-display text-base font-extrabold text-primary sm:text-lg">Upload Image</span>
-                    <span className="mt-1 text-xs font-bold text-muted-foreground sm:text-sm">Click the box to choose a picture</span>
+                    <span className="mt-3 font-display text-base font-extrabold text-primary sm:text-lg">
+                      Upload Image
+                    </span>
+                    <span className="mt-1 text-xs font-bold text-muted-foreground sm:text-sm">
+                      Click the box to choose a picture
+                    </span>
                   </>
                 )}
-                {imageName && <span className="mt-3 max-w-full truncate text-xs font-bold text-muted-foreground">{imageName}</span>}
+                {imageName && (
+                  <span className="mt-3 max-w-full truncate text-xs font-bold text-muted-foreground">
+                    {imageName}
+                  </span>
+                )}
               </label>
               <textarea
                 required
@@ -282,16 +320,30 @@ function MessagesPage() {
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-display text-lg font-extrabold sm:text-xl">Drawing and Feedback</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Upload a drawing, then write your feedback.</p>
+                <h2 className="font-display text-lg font-extrabold sm:text-xl">
+                  Drawing and Feedback
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Upload a drawing, then write your feedback.
+                </p>
               </div>
-              <TelegramBtn onClick={() => { setTg2Open((v) => !v); setTg1Open(false); setTg3Open(false); }} />
+              <TelegramBtn
+                onClick={() => {
+                  setTg2Open((v) => !v);
+                  setTg1Open(false);
+                  setTg3Open(false);
+                }}
+              />
             </div>
             <TelegramBox
               open={tg2Open}
               text={tg2Text}
               onTextChange={setTg2Text}
-              onSend={() => { openTelegram(tg2Text); setTg2Text(""); setTg2Open(false); }}
+              onSend={() => {
+                openTelegram(tg2Text);
+                setTg2Text("");
+                setTg2Open(false);
+              }}
               onClose={() => setTg2Open(false)}
             />
 
@@ -300,19 +352,36 @@ function MessagesPage() {
                 className="flex min-h-40 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-primary/35 bg-primary/5 p-4 text-center transition hover:border-primary hover:bg-primary/10 sm:min-h-48"
                 aria-label="Upload drawing"
               >
-                <input type="file" accept="image/*" className="sr-only" onChange={handleDrawingImageChange} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handleDrawingImageChange}
+                />
                 {drawingImagePreview ? (
-                  <img src={drawingImagePreview} alt="Drawing preview" className="h-36 w-full rounded-2xl object-cover sm:h-40" />
+                  <img
+                    src={drawingImagePreview}
+                    alt="Drawing preview"
+                    className="h-36 w-full rounded-2xl object-cover sm:h-40"
+                  />
                 ) : (
                   <>
                     <span className="flex size-14 items-center justify-center rounded-full bg-card text-primary shadow-[var(--shadow-soft)] sm:size-16">
                       <ImageUp className="size-7 sm:size-8" />
                     </span>
-                    <span className="mt-3 font-display text-base font-extrabold text-primary sm:text-lg">Upload Drawing</span>
-                    <span className="mt-1 text-xs font-bold text-muted-foreground sm:text-sm">Click the box to choose a picture</span>
+                    <span className="mt-3 font-display text-base font-extrabold text-primary sm:text-lg">
+                      Upload Drawing
+                    </span>
+                    <span className="mt-1 text-xs font-bold text-muted-foreground sm:text-sm">
+                      Click the box to choose a picture
+                    </span>
                   </>
                 )}
-                {drawingImageName && <span className="mt-3 max-w-full truncate text-xs font-bold text-muted-foreground">{drawingImageName}</span>}
+                {drawingImageName && (
+                  <span className="mt-3 max-w-full truncate text-xs font-bold text-muted-foreground">
+                    {drawingImageName}
+                  </span>
+                )}
               </label>
               <textarea
                 required
@@ -329,7 +398,9 @@ function MessagesPage() {
               <Send className="size-4" /> Send Message
             </button>
             {drawingMessageSent && (
-              <p className="mt-3 text-sm font-bold text-primary">Your drawing and feedback has been sent.</p>
+              <p className="mt-3 text-sm font-bold text-primary">
+                Your drawing and feedback has been sent.
+              </p>
             )}
           </form>
 
@@ -371,13 +442,23 @@ function MessagesPage() {
                   Add family name, kid username, and send the message to Telegram.
                 </p>
               </div>
-              <TelegramBtn onClick={() => { setTg3Open((v) => !v); setTg1Open(false); setTg2Open(false); }} />
+              <TelegramBtn
+                onClick={() => {
+                  setTg3Open((v) => !v);
+                  setTg1Open(false);
+                  setTg2Open(false);
+                }}
+              />
             </div>
             <TelegramBox
               open={tg3Open}
               text={tg3Text}
               onTextChange={setTg3Text}
-              onSend={() => { openTelegram(tg3Text); setTg3Text(""); setTg3Open(false); }}
+              onSend={() => {
+                openTelegram(tg3Text);
+                setTg3Text("");
+                setTg3Open(false);
+              }}
               onClose={() => setTg3Open(false)}
             />
 
@@ -421,7 +502,6 @@ function MessagesPage() {
               </p>
             )}
           </form>
-
         </div>
       </main>
       <MobileNav />

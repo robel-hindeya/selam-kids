@@ -3,6 +3,9 @@
   "private": true,
   "sideEffects": false,
   "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -11,9 +14,7 @@
     "lint": "eslint .",
     "format": "prettier --write ."
   },
-  "overrides": {
-    "rolldown": "1.2.1"
-  },
+  "overrides": {},
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
