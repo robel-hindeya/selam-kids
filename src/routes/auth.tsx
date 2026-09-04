@@ -1,9 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import heroReading from "@/assets/hero-reading.jpg";
-import logoAsset from "@/assets/selamkids-logo.png.asset.json";
 import { useAuth } from "@/hooks/useAuth";
 
-const logoUrl = logoAsset.url;
+const logoUrl = "/selamkids-logo.png";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({

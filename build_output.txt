@@ -1,0 +1,30 @@
+
+> build
+> vite build
+
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+vite v8.1.5 building client environment for production...
+[2Ktransforming...✓ 1911 modules transformed.
+✗ Build failed in 8.16s
+error during build:
+Build failed with 1 error:
+
+[plugin vite:asset]
+Error: ENOENT: no such file or directory, open '/home/robel/Downloads/selam kids/src/assets/selamkids-logo.png'
+    at async open (node:internal/fs/promises:637:25)
+    at async Object.readFile (node:internal/fs/promises:1269:14)
+    at async fileToBuiltUrl (file:///home/robel/Downloads/selam%20kids/node_modules/vite/dist/node/chunks/node.js:20984:18)
+    at async LoadPluginContextImpl.handler (file:///home/robel/Downloads/selam%20kids/node_modules/vite/dist/node/chunks/node.js:20874:15)
+    at async plugin (file:///home/robel/Downloads/selam%20kids/node_modules/vite/node_modules/rolldown/dist/shared/bindingify-input-options-XPJLJOD0.mjs:1547:16)
+    at async plugin.<computed> (file:///home/robel/Downloads/selam%20kids/node_modules/vite/node_modules/rolldown/dist/shared/bindingify-input-options-XPJLJOD0.mjs:1959:12)
+    at aggregateBindingErrorsIntoJsError (file:///home/robel/Downloads/selam%20kids/node_modules/vite/node_modules/rolldown/dist/shared/error-BHRSI0R7.mjs:48:18)
+    at unwrapBindingResult (file:///home/robel/Downloads/selam%20kids/node_modules/vite/node_modules/rolldown/dist/shared/error-BHRSI0R7.mjs:18:128)
+    at #build (file:///home/robel/Downloads/selam%20kids/node_modules/vite/node_modules/rolldown/dist/shared/rolldown-build-CtPvmZgJ.mjs:3276:34)
+    at async buildEnvironment (file:///home/robel/Downloads/selam%20kids/node_modules/vite/dist/node/chunks/node.js:33061:66)
+    at async Object.build (file:///home/robel/Downloads/selam%20kids/node_modules/vite/dist/node/chunks/node.js:33483:19)
+    at async buildStartViteEnvironments (file:///home/robel/Downloads/selam%20kids/node_modules/@tanstack/start-plugin-core/dist/esm/vite/planning.js:95:23)
+    at async Object.buildApp (file:///home/robel/Downloads/selam%20kids/node_modules/@tanstack/start-plugin-core/dist/esm/vite/plugin.js:113:8)
+    at async Object.buildApp (file:///home/robel/Downloads/selam%20kids/node_modules/vite/dist/node/chunks/node.js:33475:6)
+    at async CAC.<anonymous> (file:///home/robel/Downloads/selam%20kids/node_modules/vite/dist/node/cli.js:776:3) {
+  errors: [Getter/Setter]
+}
