@@ -6,7 +6,6 @@ import { StoryCard } from "@/components/kids/StoryCard";
 import heroReading from "@/assets/hero-reading.jpg";
 import heroMagazine from "@/assets/hero-magazine.jpg";
 import heroKidsMagazine from "@/assets/hero-kids-magazine.jpg";
-import { stories } from "@/lib/stories";
 
 export const Route = createFileRoute("/home")({
   head: () => ({
@@ -51,13 +50,25 @@ const slides = [
 ];
 
 function HeroSlider() {
+  const [slides, setSlides] = useState<any[]>([]);
   const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/banners")
+      .then((res) => res.json())
+      .then((data) => setSlides(data))
+      .catch(console.error);
+  }, []);
+
   const go = (dir: number) => setIndex((i) => (i + dir + slides.length) % slides.length);
 
   useEffect(() => {
+    if (slides.length <= 1) return;
     const id = setInterval(() => setIndex((i) => (i + 1) % slides.length), 5000);
     return () => clearInterval(id);
-  }, []);
+  }, [slides.length]);
+
+  if (slides.length === 0) return null;
 
   return (
     <section className="relative mt-6 overflow-hidden rounded-4xl shadow-[var(--shadow-card)]">
@@ -67,9 +78,9 @@ function HeroSlider() {
       >
         {slides.map((s) => (
           <img
-            key={s.image}
-            src={s.image}
-            alt={s.alt}
+            key={s._id || s.imageUrl}
+            src={s.imageUrl || s.image}
+            alt={s.title}
             width={1280}
             height={640}
             className="h-72 w-full shrink-0 object-cover sm:h-80"
@@ -109,12 +120,11 @@ function HeroSlider() {
       <div className="absolute bottom-4 left-8 flex gap-2">
         {slides.map((s, i) => (
           <button
-            key={s.image}
+            key={s._id || s.imageUrl}
             aria-label={`Go to slide ${i + 1}`}
             onClick={() => setIndex(i)}
-            className={`h-2.5 rounded-full transition-all ${
-              i === index ? "w-7 bg-secondary" : "w-2.5 bg-card/70"
-            }`}
+            className={`h-2.5 rounded-full transition-all ${i === index ? "w-7 bg-secondary" : "w-2.5 bg-card/70"
+              }`}
           />
         ))}
       </div>
@@ -123,6 +133,15 @@ function HeroSlider() {
 }
 
 function HomePage() {
+  const [dynamicStories, setDynamicStories] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/magazines")
+      .then((res) => res.json())
+      .then((data) => setDynamicStories(data))
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background p-4 pb-24 font-sans lg:p-8 lg:pb-8">
       <Sidebar />
@@ -155,9 +174,23 @@ function HomePage() {
             <button className="text-sm font-bold text-primary hover:underline">See All</button>
           </div>
           <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {stories.map((s) => (
-              <StoryCard key={s.slug} {...s} />
-            ))}
+            {dynamicStories.length > 0 ? dynamicStories.map((m) => (
+              <StoryCard
+                key={m._id}
+                slug={`mag-${m._id}`}
+                title={m.title}
+                description={m.description || "A wonderful new edition is waiting for you."}
+                image={m.coverUrl}
+                minutes={m.minutes || 5}
+                likes={m.likes || 0}
+                tint="bg-secondary/15"
+                edition={m.edition || "New Edition"}
+              />
+            )) : (
+              <p className="col-span-full rounded-3xl bg-card p-8 text-center text-sm font-bold text-muted-foreground">
+                No magazines have been published yet.
+              </p>
+            )}
           </div>
         </section>
       </main>

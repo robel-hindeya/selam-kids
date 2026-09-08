@@ -1,35 +1,82 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
-const AUTH_KEY = "selamKidsLoggedIn";
+export interface AuthUser {
+  _id: string;
+  username: string;
+  email: string;
+  displayName: string;
+  gender: string;
+  age?: number;
+  avatarUrl: string;
+  legacyPoints: number;
+}
 
 interface AuthContextValue {
   isLoggedIn: boolean;
+  user: AuthUser | null;
+  loading: boolean;
   login: () => void;
-  logout: () => void;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Start as false for SSR safety; hydrate from localStorage on the client.
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await fetch("/api/me", { credentials: "include" });
+      if (res.ok) {
+        const data = (await res.json()) as AuthUser;
+        setUser(data);
+      } else {
+        setUser(null);
+      }
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    setIsLoggedIn(localStorage.getItem(AUTH_KEY) === "true");
-  }, []);
+    void fetchUser();
+  }, [fetchUser]);
 
   const login = useCallback(() => {
-    localStorage.setItem(AUTH_KEY, "true");
-    setIsLoggedIn(true);
+    // Redirect to backend Google OAuth — backend will set JWT cookie and redirect back
+    window.location.href = "/api/auth/google";
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(AUTH_KEY);
-    setIsLoggedIn(false);
+  const logout = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } finally {
+      setUser(null);
+      window.location.href = "/auth";
+    }
   }, []);
+
+  const refreshUser = useCallback(async () => {
+    await fetchUser();
+  }, [fetchUser]);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider
+      value={{ isLoggedIn: !!user, user, loading, login, logout, refreshUser }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
 }
 

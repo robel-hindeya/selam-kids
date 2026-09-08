@@ -1,0 +1,37 @@
+[
+  {
+    "_id": "1788875893200-afjlcw",
+    "title": "Ethiopia app",
+    "description": "this is Ethiopia app for kids",
+    "coverUrl": "/uploads/1788875893087-c0e0dafe661d.jpeg",
+    "minutes": 19,
+    "likes": 0,
+    "edition": "sept",
+    "category": "calcheral",
+    "date": "2026-09-08",
+    "paragraphs": [
+      "Ethiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia app"
+    ],
+    "funFact": "mnb",
+    "targetUrl": "",
+    "active": true,
+    "createdAt": "2026-09-08T13:58:13.200Z"
+  },
+  {
+    "_id": "1788875419136-t6wlje",
+    "title": "Ethiopia app",
+    "description": "",
+    "coverUrl": "/uploads/1788875419062-f8fbd8832617.png",
+    "minutes": 5,
+    "likes": 0,
+    "edition": "sept",
+    "targetUrl": "http://localhost:8080/admin",
+    "active": true,
+    "createdAt": "2026-09-08T13:50:19.136Z",
+    "category": "",
+    "paragraphs": [
+      "Ethiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia appEthiopia app"
+    ],
+    "funFact": ""
+  }
+]

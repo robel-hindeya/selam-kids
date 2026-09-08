@@ -58,8 +58,20 @@ const stats = [
   { label: "Favorites", value: 7, icon: Heart, tint: "bg-accent/20" },
 ];
 
+import { useState, useEffect } from "react";
+
 function LibraryPage() {
   const { isLoggedIn } = useAuth();
+  const [myMagazines, setMyMagazines] = useState<any[]>(reading);
+
+  useEffect(() => {
+    fetch("/api/magazines")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.length > 0) setMyMagazines(data);
+      })
+      .catch(console.error);
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-background p-4 pb-24 font-sans lg:p-8 lg:pb-8">
@@ -98,8 +110,18 @@ function LibraryPage() {
         <section className="mt-8">
           <h2 className="font-display text-xl font-extrabold">My Magazines</h2>
           <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {reading.map((s) => (
-              <StoryCard key={s.slug} {...s} />
+            {myMagazines.map((s) => (
+              <StoryCard
+                key={s._id || s.slug}
+                slug={s._id ? `mag-${s._id}` : s.slug}
+                title={s.title}
+                description={s.description || "A wonderful read."}
+                image={s.coverUrl || s.image}
+                minutes={s.minutes || 5}
+                likes={s.likes || 120}
+                tint={s.tint || "bg-leaf/20"}
+                edition={s.edition || "New"}
+              />
             ))}
           </div>
         </section>

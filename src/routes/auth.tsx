@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import heroReading from "@/assets/hero-reading.jpg";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -22,13 +23,13 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const { login } = useAuth();
+  const { isLoggedIn, login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    login();
-    void navigate({ to: "/home" });
-  };
+  // Already logged in → go straight to home
+  useEffect(() => {
+    if (isLoggedIn) void navigate({ to: "/home" });
+  }, [isLoggedIn, navigate]);
 
   return (
     <main className="min-h-screen bg-background p-4 font-sans">
@@ -72,26 +73,17 @@ function AuthPage() {
               <img src={logoUrl} alt="Selam Kids logo" className="h-14 w-auto rounded-2xl" />
               <h2 className="mt-5 font-display text-3xl font-extrabold">Sign in</h2>
               <p className="mt-2 text-sm font-bold text-muted-foreground">
-                Choose how you'd like to continue
+                Continue with your Google account
               </p>
 
               <div className="mt-8 flex w-full flex-col gap-3">
-                {/* Google */}
+                {/* Google — only option */}
                 <button
-                  onClick={handleLogin}
+                  onClick={login}
                   className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-5 py-4 font-display text-sm font-extrabold text-gray-800 shadow-[var(--shadow-soft)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <GoogleIcon />
                   Continue with Google
-                </button>
-
-                {/* Apple */}
-                <button
-                  onClick={handleLogin}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-black px-5 py-4 font-display text-sm font-extrabold text-white shadow-[var(--shadow-soft)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <AppleIcon />
-                  Continue with Apple
                 </button>
               </div>
 
@@ -125,14 +117,6 @@ function GoogleIcon() {
         d="M9 3.58c1.321 0 2.508.454 3.44 1.346l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.96l3.007 2.332C4.672 5.165 6.656 3.58 9 3.58z"
         fill="#EA4335"
       />
-    </svg>
-  );
-}
-
-function AppleIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
-      <path d="M13.012 9.38c-.015-1.573.856-2.765 2.605-3.643-.98-1.408-2.461-2.185-4.424-2.333-1.862-.144-3.893 1.095-4.63 1.095-.782 0-2.618-1.044-4.025-1.044C.073 3.501-.995 6.17.235 9.76c.438 1.264 1.18 2.668 2.23 4.209.897 1.298 1.889 2.753 3.255 2.766 1.307.013 1.774-.833 3.32-.833 1.54 0 1.965.833 3.33.806 1.4-.026 2.44-1.6 3.328-2.903.588-.853.996-1.543 1.302-2.098-3.396-1.328-3.99-3.302-3.988-6.328zM10.34.896c1.296-.146 2.565.717 3.354 1.713-.773.045-2.604.884-3.51 2.64-.853 1.667-.526 3.285-.434 3.435-.636-.12-2.965-3.195-2.966-5.277C7.386 1.84 8.947 1.051 10.34.896z" />
     </svg>
   );
 }

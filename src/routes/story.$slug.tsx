@@ -1,5 +1,5 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Bookmark,
@@ -12,32 +12,26 @@ import {
   Sparkles,
 } from "lucide-react";
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
-import { getStory } from "@/lib/stories";
+type Story = {
+  slug: string;
+  image: string;
+  title: string;
+  description: string;
+  minutes: number;
+  likes: number;
+  tint: string;
+  category: string;
+  date: string;
+  paragraphs: string[];
+  funFact: string;
+  edition?: string;
+};
 
 export const Route = createFileRoute("/story/$slug")({
-  loader: ({ params }) => {
-    const story = getStory(params.slug);
-    if (!story) throw notFound();
-    return { story };
-  },
-  head: ({ loaderData }) => {
-    if (!loaderData) {
-      return {
-        meta: [{ title: "Story not found — Little Read" }, { name: "robots", content: "noindex" }],
-      };
-    }
-    const { title, description } = loaderData.story;
-    return {
-      meta: [
-        { title: `${title} — Little Read` },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
-        { property: "og:type", content: "article" },
-        { name: "twitter:card", content: "summary_large_image" },
-      ],
-    };
-  },
+  loader: () => ({ story: null }),
+  head: () => ({
+    meta: [{ title: "Story — Selam Kids" }, { name: "description", content: "Read a Selam Kids story." }],
+  }),
   notFoundComponent: StoryNotFound,
   component: StoryPage,
 });
@@ -61,8 +55,49 @@ function StoryNotFound() {
 const PARAGRAPHS_PER_PAGE = 2;
 
 function StoryPage() {
-  const { story } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const [dynamicStory, setDynamicStory] = useState<Story | null>(null);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    if (!slug.startsWith("mag-")) {
+      setLoading(false);
+      return;
+    }
+
+    const magazineId = slug.slice(4);
+    fetch(`/api/magazines/${magazineId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((magazine) => {
+        if (!magazine) return;
+        setDynamicStory({
+          slug,
+          image: magazine.coverUrl,
+          title: magazine.title,
+          description: magazine.description || "A wonderful new magazine is waiting for you.",
+          minutes: magazine.minutes || 5,
+          likes: magazine.likes || 0,
+          tint: "bg-secondary/15",
+          category: magazine.category || "Magazine",
+          date: magazine.date || new Date(magazine.createdAt).toLocaleDateString(),
+          paragraphs: magazine.paragraphs?.length
+            ? magazine.paragraphs
+            : [magazine.description || "This story is ready to be explored."],
+          funFact: magazine.funFact || "Every story teaches us something new.",
+          edition: magazine.edition || "New Edition",
+        });
+      })
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  const story = dynamicStory;
+
+  if (loading) {
+    return <div className="min-h-screen bg-background p-8 text-center font-bold">Loading story...</div>;
+  }
+  if (!story) return <StoryNotFound />;
+
   const totalPages = Math.max(1, Math.ceil(story.paragraphs.length / PARAGRAPHS_PER_PAGE));
   const pageParagraphs = story.paragraphs.slice(
     page * PARAGRAPHS_PER_PAGE,

@@ -12,4 +12,23 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    server: {
+      port: 8080,
+      proxy: {
+        // Proxy all /api requests to Express backend in dev
+        "/api": {
+          target: "http://localhost:4000",
+          changeOrigin: true,
+          secure: false,
+        },
+        // Also proxy uploaded images
+        "/uploads": {
+          target: "http://localhost:4000",
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+    },
+  },
 });

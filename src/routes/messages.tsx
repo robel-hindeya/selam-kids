@@ -107,36 +107,22 @@ const sendTelegramFeedback = createServerFn({ method: "POST" })
     message: data.message.trim(),
   }))
   .handler(async ({ data }) => {
-    if (!data.familyName || !data.kidUsername || !data.message) {
-      throw new Error("Please fill in every family feedback field.");
-    }
-
-    const botToken = process.env["TELEGRAM_BOT_TOKEN"];
-    const chatId = process.env["TELEGRAM_CHAT_ID"];
-
-    if (!botToken || !chatId) {
-      throw new Error("Telegram is not configured yet.");
-    }
-
-    const text = [
-      "New Family Feedback",
-      `Family name: ${data.familyName}`,
-      `Kid username: ${data.kidUsername}`,
-      `Message: ${data.message}`,
-    ].join("\n");
-
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Telegram could not send the message.");
-    }
-
+    // Keep serverFn valid, but we won't use it directly from the UI for DB saving
     return { success: true };
   });
+
+async function uploadImage(file: File): Promise<string | null> {
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", credentials: "include", body: fd });
+    if (!res.ok) return null;
+    const { url } = await res.json();
+    return url;
+  } catch {
+    return null;
+  }
+}
 
 // ── Page ───────────────────────────────────────────────────────────────────
 function MessagesPage() {
@@ -215,12 +201,29 @@ function MessagesPage() {
         <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-2">
           {/* ── Message to God ── */}
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
+              const form = e.currentTarget as HTMLFormElement;
+              const text = (form.querySelector("textarea") as HTMLTextAreaElement).value;
+              const fileInput = form.querySelector("input[type=file]") as HTMLInputElement;
+
+              let imageUrl = "";
+              if (fileInput.files?.[0]) {
+                const res = await uploadImage(fileInput.files[0]);
+                if (res) imageUrl = res;
+              }
+
+              await fetch("/api/feedback", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type: "God", message: text, imageUrl }),
+              });
+
               setSent("message");
               setImagePreview(null);
               setImageName("");
-              (e.currentTarget as HTMLFormElement).reset();
+              form.reset();
             }}
             className="relative rounded-3xl bg-card p-4 shadow-[var(--shadow-card)] sm:rounded-4xl sm:p-6"
           >
@@ -309,12 +312,30 @@ function MessagesPage() {
 
           {/* ── Drawing and Feedback ── */}
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
+
+              const form = e.currentTarget as HTMLFormElement;
+              const text = (form.querySelector("textarea") as HTMLTextAreaElement).value;
+              const fileInput = form.querySelector("input[type=file]") as HTMLInputElement;
+
+              let imageUrl = "";
+              if (fileInput.files?.[0]) {
+                const res = await uploadImage(fileInput.files[0]);
+                if (res) imageUrl = res;
+              }
+
+              await fetch("/api/feedback", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type: "Drawing", message: text, imageUrl }),
+              });
+
               setDrawingMessageSent(true);
               setDrawingImagePreview(null);
               setDrawingImageName("");
-              (e.currentTarget as HTMLFormElement).reset();
+              form.reset();
             }}
             className="relative rounded-3xl bg-card p-4 shadow-[var(--shadow-card)] sm:rounded-4xl sm:p-6"
           >
@@ -413,20 +434,23 @@ function MessagesPage() {
               const form = e.currentTarget as HTMLFormElement;
               const formData = new FormData(form);
               try {
-                await sendTelegramFeedbackFn({
-                  data: {
+                await fetch("/api/feedback", {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    type: "Family",
                     familyName: String(formData.get("familyName") ?? ""),
                     kidUsername: String(formData.get("kidUsername") ?? ""),
-                    message: String(formData.get("message") ?? ""),
-                  },
+                    message: String(formData.get("message") ?? "")
+                  }),
                 });
+
                 setSent("feedback");
                 form.reset();
               } catch (error) {
                 setSent(null);
-                setFeedbackError(
-                  error instanceof Error ? error.message : "Telegram could not send the message.",
-                );
+                setFeedbackError("Could not send the message to server.");
               } finally {
                 setIsSendingFeedback(false);
               }
