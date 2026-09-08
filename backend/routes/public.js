@@ -10,7 +10,7 @@ router.get("/banners", async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) return res.json(getBanners({ activeOnly: true }));
         const banners = await Banner.find({ active: true }).sort({ order: 1, createdAt: -1 });
-        res.json(banners);
+        res.json(banners.length > 0 ? banners : getBanners({ activeOnly: true }));
     } catch {
         res.status(500).json({ error: "Server error" });
     }
@@ -21,7 +21,7 @@ router.get("/magazines", async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) return res.json(getMagazines({ activeOnly: true }));
         const magazines = await Magazine.find({ active: true }).sort({ createdAt: -1 });
-        res.json(magazines);
+        res.json(magazines.length > 0 ? magazines : getMagazines({ activeOnly: true }));
     } catch {
         res.status(500).json({ error: "Server error" });
     }
@@ -34,7 +34,9 @@ router.get("/magazines/:id", async (req, res) => {
             return magazine ? res.json(magazine) : res.status(404).json({ error: "Magazine not found" });
         }
         const magazine = await Magazine.findById(req.params.id);
-        return magazine ? res.json(magazine) : res.status(404).json({ error: "Magazine not found" });
+        if (magazine) return res.json(magazine);
+        const localMagazine = getMagazine(req.params.id);
+        return localMagazine ? res.json(localMagazine) : res.status(404).json({ error: "Magazine not found" });
     } catch {
         const magazine = getMagazine(req.params.id);
         return magazine ? res.json(magazine) : res.status(404).json({ error: "Magazine not found" });

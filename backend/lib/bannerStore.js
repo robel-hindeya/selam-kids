@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const dataDir = path.resolve("data");
+const dataDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "data");
 const bannersFile = path.join(dataDir, "banners.json");
 const magazinesFile = path.join(dataDir, "magazines.json");
 
