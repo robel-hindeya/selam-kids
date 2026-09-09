@@ -25,7 +25,7 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..", "..");
-const PORT = Number(process.env.PORT || 8080);
+const PORT = Number(process.env.PORT || 4000);
 const isProduction = process.env.NODE_ENV === "production";
 const uploadsDir = path.join(ROOT, "public", "uploads");
 

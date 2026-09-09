@@ -1,11 +1,12 @@
 import "dotenv/config";
 import app from "./app.js";
-import { connectMongo } from "./lib/mongo.js";
+import { connectPostgres } from "./lib/postgres.js";
 
 const PORT = process.env.PORT ?? 4000;
 
 app.listen(PORT, () => console.log(`🚀 API server running on http://localhost:${PORT}`));
 
-connectMongo().catch((error) => {
-  console.warn("⚠️ MongoDB unavailable; using local fallback storage:", error.message);
+connectPostgres().catch((error) => {
+  console.error("⚠️ PostgreSQL connection failed:", error.message);
+  process.exitCode = 1;
 });
