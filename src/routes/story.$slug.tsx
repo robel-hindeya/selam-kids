@@ -15,6 +15,7 @@ import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
 type Story = {
   slug: string;
   image: string;
+  storyImages: string[];
   title: string;
   description: string;
   minutes: number;
@@ -74,6 +75,11 @@ function StoryPage() {
         setDynamicStory({
           slug,
           image: magazine.coverUrl,
+          storyImages: Array.isArray(magazine.storyImages)
+            ? magazine.storyImages
+            : magazine.storyImageUrl
+              ? [magazine.storyImageUrl]
+              : [],
           title: magazine.title,
           description: magazine.description || "A wonderful new magazine is waiting for you.",
           minutes: magazine.minutes || 5,
@@ -98,7 +104,11 @@ function StoryPage() {
   }
   if (!story) return <StoryNotFound />;
 
-  const totalPages = Math.max(1, Math.ceil(story.paragraphs.length / PARAGRAPHS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(story.paragraphs.length / PARAGRAPHS_PER_PAGE),
+    story.storyImages.length,
+  );
   const pageParagraphs = story.paragraphs.slice(
     page * PARAGRAPHS_PER_PAGE,
     page * PARAGRAPHS_PER_PAGE + PARAGRAPHS_PER_PAGE,
@@ -180,6 +190,14 @@ function StoryPage() {
                 {pageParagraphs.map((p) => (
                   <p key={p.slice(0, 24)}>{p}</p>
                 ))}
+
+                {story.storyImages[page] && (
+                  <img
+                    src={story.storyImages[page]}
+                    alt={`Illustration for ${story.title}`}
+                    className="w-full rounded-3xl object-cover"
+                  />
+                )}
 
                 <div className="flex items-center justify-between gap-3 pt-2">
                   <button

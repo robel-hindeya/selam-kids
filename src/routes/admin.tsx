@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import { Pencil } from "lucide-react";
+import { ImagePlus, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
     head: () => ({
@@ -66,12 +66,12 @@ function MagazinesTab() {
     const [description, setDescription] = useState("");
     const [edition, setEdition] = useState("");
     const [minutes, setMinutes] = useState("5");
-    const [targetUrl, setTargetUrl] = useState("");
-    const [category, setCategory] = useState("");
     const [paragraphs, setParagraphs] = useState("");
-    const [funFact, setFunFact] = useState("");
+    const [fileName, setFileName] = useState("");
+    const [storyFileName, setStoryFileName] = useState("");
     const [editingId, setEditingId] = useState<string | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
+    const storyFileRef = useRef<HTMLInputElement>(null);
 
     const fetchMagazines = async () => {
         const res = await fetch("/api/admin/magazines", { credentials: "include" });
@@ -85,9 +85,15 @@ function MagazinesTab() {
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         const selectedFile = fileRef.current?.files?.[0];
-        if (!title || (!editingId && !selectedFile)) return alert("Title and cover required");
+        const selectedStoryFiles = Array.from(storyFileRef.current?.files || []);
+        if (!title || (!editingId && (!selectedFile || selectedStoryFiles.length === 0))) {
+            return alert("Title, cover, and story images required");
+        }
         try {
             const imageUrl = selectedFile ? (await uploadFile(selectedFile)).url : undefined;
+            const storyImages = selectedStoryFiles.length
+                ? await Promise.all(selectedStoryFiles.map(async (file) => (await uploadFile(file)).url))
+                : undefined;
             const response = await fetch(editingId ? `/api/admin/magazines/${editingId}` : "/api/admin/magazines", {
                 method: editingId ? "PUT" : "POST",
                 credentials: "include",
@@ -97,14 +103,12 @@ function MagazinesTab() {
                     description,
                     edition,
                     minutes: Number(minutes) || 5,
-                    targetUrl,
-                    category,
                     paragraphs: paragraphs
                         .split(/\n+/)
                         .map((paragraph) => paragraph.trim())
                         .filter(Boolean),
-                    funFact,
                     ...(imageUrl ? { coverUrl: imageUrl } : {}),
+                    ...(storyImages ? { storyImages } : {}),
                     active: true,
                 }),
             });
@@ -116,12 +120,12 @@ function MagazinesTab() {
             setDescription("");
             setEdition("");
             setMinutes("5");
-            setTargetUrl("");
-            setCategory("");
             setParagraphs("");
-            setFunFact("");
+            setFileName("");
+            setStoryFileName("");
             setEditingId(null);
             if (fileRef.current) fileRef.current.value = "";
+            if (storyFileRef.current) storyFileRef.current.value = "";
             void fetchMagazines();
         } catch (error) {
             alert(error instanceof Error ? error.message : "Failed to upload magazine");
@@ -134,11 +138,11 @@ function MagazinesTab() {
         setDescription(magazine.description || "");
         setEdition(magazine.edition || "");
         setMinutes(String(magazine.minutes || 5));
-        setTargetUrl(magazine.targetUrl || "");
-        setCategory(magazine.category || "");
         setParagraphs(Array.isArray(magazine.paragraphs) ? magazine.paragraphs.join("\n") : "");
-        setFunFact(magazine.funFact || "");
+        setFileName("");
+        setStoryFileName(magazine.storyImages?.length ? `${magazine.storyImages.length} images saved` : "");
         if (fileRef.current) fileRef.current.value = "";
+        if (storyFileRef.current) storyFileRef.current.value = "";
     };
 
     const cancelEdit = () => {
@@ -147,11 +151,11 @@ function MagazinesTab() {
         setDescription("");
         setEdition("");
         setMinutes("5");
-        setTargetUrl("");
-        setCategory("");
         setParagraphs("");
-        setFunFact("");
+        setFileName("");
+        setStoryFileName("");
         if (fileRef.current) fileRef.current.value = "";
+        if (storyFileRef.current) storyFileRef.current.value = "";
     };
 
     const handleDelete = async (id: string) => {
@@ -194,33 +198,42 @@ function MagazinesTab() {
                         onChange={(e) => setMinutes(e.target.value)}
                         className="rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
                     />
-                    <input
-                        type="url"
-                        placeholder="Optional read link"
-                        value={targetUrl}
-                        onChange={(e) => setTargetUrl(e.target.value)}
-                        className="rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Story category"
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                    />
                     <textarea
                         placeholder="Story paragraphs, one paragraph per line"
                         value={paragraphs}
                         onChange={(e) => setParagraphs(e.target.value)}
                         className="min-h-32 rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
                     />
-                    <textarea
-                        placeholder="Fun fact"
-                        value={funFact}
-                        onChange={(e) => setFunFact(e.target.value)}
-                        className="min-h-20 rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                    />
-                    <input type="file" accept="image/*" ref={fileRef} required={!editingId} className="text-sm" />
+                    <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-700 bg-neutral-950 px-4 py-6 text-center transition-colors hover:border-blue-500 hover:bg-neutral-950/70">
+                        <ImagePlus className="size-7 text-blue-400" />
+                        <span className="text-sm font-bold text-white">{storyFileName || "Choose story images"}</span>
+                        <span className="text-xs text-neutral-500">Select 10 or more images for the story</span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            ref={storyFileRef}
+                            multiple
+                            required={!editingId}
+                            onChange={(e) => {
+                                const count = e.target.files?.length || 0;
+                                setStoryFileName(count ? `${count} story images selected` : "");
+                            }}
+                            className="sr-only"
+                        />
+                    </label>
+                    <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-700 bg-neutral-950 px-4 py-6 text-center transition-colors hover:border-blue-500 hover:bg-neutral-950/70">
+                        <ImagePlus className="size-7 text-blue-400" />
+                        <span className="text-sm font-bold text-white">{fileName || "Choose magazine cover"}</span>
+                        <span className="text-xs text-neutral-500">PNG, JPG, WEBP up to 5 MB</span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            ref={fileRef}
+                            required={!editingId}
+                            onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
+                            className="sr-only"
+                        />
+                    </label>
                     <button type="submit" className="mt-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 font-bold">
                         {editingId ? "Save Changes" : "Upload Magazine"}
                     </button>
@@ -257,6 +270,7 @@ function BannersTab() {
     const [banners, setBanners] = useState<any[]>([]);
     const [title, setTitle] = useState("");
     const [kicker, setKicker] = useState("");
+    const [fileName, setFileName] = useState("");
     const [editingId, setEditingId] = useState<string | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
 
@@ -287,6 +301,7 @@ function BannersTab() {
             }
             setTitle("");
             setKicker("");
+            setFileName("");
             setEditingId(null);
             if (fileRef.current) fileRef.current.value = "";
             void fetchBanners();
@@ -299,6 +314,7 @@ function BannersTab() {
         setEditingId(banner._id);
         setTitle(banner.title || "");
         setKicker(banner.kicker || "");
+        setFileName("");
         if (fileRef.current) fileRef.current.value = "";
     };
 
@@ -306,6 +322,7 @@ function BannersTab() {
         setEditingId(null);
         setTitle("");
         setKicker("");
+        setFileName("");
         if (fileRef.current) fileRef.current.value = "";
     };
 
@@ -335,7 +352,19 @@ function BannersTab() {
                         onChange={(e) => setKicker(e.target.value)}
                         className="rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
                     />
-                    <input type="file" accept="image/*" ref={fileRef} required={!editingId} className="text-sm" />
+                    <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-700 bg-neutral-950 px-4 py-6 text-center transition-colors hover:border-blue-500 hover:bg-neutral-950/70">
+                        <ImagePlus className="size-7 text-blue-400" />
+                        <span className="text-sm font-bold text-white">{fileName || "Choose banner image"}</span>
+                        <span className="text-xs text-neutral-500">PNG, JPG, WEBP up to 5 MB</span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            ref={fileRef}
+                            required={!editingId}
+                            onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
+                            className="sr-only"
+                        />
+                    </label>
                     <button type="submit" className="mt-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 font-bold">
                         {editingId ? "Save Changes" : "Create Banner"}
                     </button>
