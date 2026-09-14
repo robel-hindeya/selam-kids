@@ -47,7 +47,7 @@ router.get("/superadmin/dashboard", async (_req, res) => {
 router.get("/superadmin/users", async (_req, res) => {
   try {
     const result = await query(`
-      SELECT id, display_name, username, email, avatar_url, is_admin, is_super_admin, created_at
+      SELECT id, display_name, username, email, gender, age, avatar_url, is_admin, is_super_admin, created_at
       FROM users ORDER BY created_at DESC
     `);
     res.json(result.rows.map((row) => ({
@@ -55,6 +55,8 @@ router.get("/superadmin/users", async (_req, res) => {
       displayName: row.display_name,
       username: row.username,
       email: row.email,
+      gender: row.gender,
+      age: row.age,
       avatarUrl: row.avatar_url,
       isAdmin: row.is_admin,
       isSuperAdmin: row.is_super_admin,
@@ -92,7 +94,7 @@ router.post("/superadmin/admins", async (req, res) => {
     const result = await query(
       `UPDATE users SET is_admin = TRUE, updated_at = NOW()
        WHERE LOWER(email) = $1
-       RETURNING id, display_name, username, email, avatar_url, is_admin, is_super_admin, created_at`,
+       RETURNING id, display_name, username, email, gender, age, avatar_url, is_admin, is_super_admin, created_at`,
       [email],
     );
     if (!result.rows[0]) {
@@ -104,6 +106,8 @@ router.post("/superadmin/admins", async (req, res) => {
       displayName: row.display_name,
       username: row.username,
       email: row.email,
+      gender: row.gender,
+      age: row.age,
       avatarUrl: row.avatar_url,
       isAdmin: row.is_admin,
       isSuperAdmin: row.is_super_admin,

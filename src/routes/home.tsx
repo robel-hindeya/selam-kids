@@ -71,7 +71,7 @@ function HeroSlider() {
   if (slides.length === 0) return null;
 
   return (
-    <section className="relative mt-6 overflow-hidden rounded-4xl shadow-[var(--shadow-card)]">
+    <section className="relative mt-6 overflow-hidden rounded-4xl">
       <div
         className="flex transition-transform duration-700 ease-out"
         style={{ transform: `translateX(-${index * 100}%)` }}

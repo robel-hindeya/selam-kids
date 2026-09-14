@@ -154,3 +154,17 @@
     color: var(--color-foreground);
   }
 }
+
+.auth-input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-card);
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.auth-input:focus {
+  border-color: var(--color-primary);
+}

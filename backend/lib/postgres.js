@@ -41,12 +41,14 @@ export async function connectPostgres() {
       gender TEXT NOT NULL DEFAULT '',
       age INTEGER,
       avatar_url TEXT NOT NULL DEFAULT '',
+      password_hash TEXT,
       legacy_points INTEGER NOT NULL DEFAULT 0,
       is_admin BOOLEAN NOT NULL DEFAULT FALSE,
       is_super_admin BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
     CREATE TABLE IF NOT EXISTS magazines (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,

@@ -24,7 +24,9 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json());
+// Registration can include a small profile-picture data URL. Express defaults
+// to 100 KB, which rejects normal phone photos before the auth route runs.
+app.use(express.json({ limit: "4mb" }));
 app.use(cookieParser());
 app.use(passport.initialize());
 app.use(express.static(path.join(ROOT, "public")));
@@ -42,6 +44,15 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", publicRoutes);
 app.use("/api", userRoutes);
+
+app.use((error, _req, res, next) => {
+  if (error?.type === "entity.too.large") {
+    return res
+      .status(413)
+      .json({ error: "Profile picture is too large. Please use a picture smaller than 2 MB." });
+  }
+  return next(error);
+});
 
 if (process.env.NODE_ENV === "production") {
   app.get("/{*splat}", (_req, res) => {

@@ -38,7 +38,7 @@ const badges = [
 ];
 
 function ProfilePage() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [points, setPoints] = useState(0);
   const [pop, setPop] = useState(false);
 
@@ -70,20 +70,22 @@ function ProfilePage() {
 
         <section className="flex flex-col items-center gap-4 rounded-4xl bg-primary p-6 text-center text-primary-foreground shadow-[var(--shadow-card)] sm:flex-row sm:text-left">
           <img
-            src={readerBoy}
-            alt="Kid reader avatar"
+            src={user?.avatarUrl || readerBoy}
+            alt="Profile avatar"
             width={160}
             height={160}
             className="size-24 rounded-full border-4 border-secondary object-cover"
           />
           <div>
-            <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Amira the Reader</h1>
-            <p className="mt-1 text-sm opacity-90">Level {level} · Little Read Explorer</p>
+            <h1 className="font-display text-2xl font-extrabold sm:text-3xl">{user?.displayName || "Amira the Reader"}</h1>
+            <p className="mt-1 text-sm opacity-90">Level {level} · {user?.age ? `${user.age} years old` : "Little Read Explorer"}</p>
           </div>
           <span className="rounded-full bg-secondary px-4 py-2 font-display text-sm font-extrabold text-secondary-foreground sm:ml-auto">
             🔥 7 day streak
           </span>
         </section>
+
+        {user && <section className="mt-6 rounded-4xl bg-card p-6 shadow-[var(--shadow-card)]"><h2 className="font-display text-lg font-extrabold">My profile details</h2><dl className="mt-4 grid gap-4 text-sm sm:grid-cols-3"><div><dt className="font-bold text-muted-foreground">Email</dt><dd className="mt-1 font-bold">{user.email || "Not provided"}</dd></div><div><dt className="font-bold text-muted-foreground">Age</dt><dd className="mt-1 font-bold">{user.age || "Not provided"}</dd></div><div><dt className="font-bold text-muted-foreground">Sex</dt><dd className="mt-1 font-bold">{user.gender || "Not provided"}</dd></div></dl></section>}
 
         <section className="mt-6 rounded-4xl bg-card p-6 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
