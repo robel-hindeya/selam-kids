@@ -4,6 +4,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { Magazine, Feedback, Banner } from "../models/Content.js";
+import { query } from "../lib/postgres.js";
 
 const router = Router();
 const uploadsDir = path.resolve("public/uploads");
@@ -25,6 +26,92 @@ const upload = multer({
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => cb(null, file.mimetype.startsWith("image/")),
+});
+
+router.get("/superadmin/dashboard", async (_req, res) => {
+  try {
+    const result = await query(`
+      SELECT
+        (SELECT COUNT(*)::int FROM users) AS users,
+        (SELECT COUNT(*)::int FROM users WHERE is_admin = TRUE) AS admins,
+        (SELECT COUNT(*)::int FROM magazines WHERE active = TRUE) AS active_magazines,
+        (SELECT COUNT(*)::int FROM magazine_sales) AS magazines_sold,
+        (SELECT COALESCE(SUM(amount_cents), 0)::int FROM magazine_sales) AS sales_cents
+    `);
+    res.json(result.rows[0]);
+  } catch {
+    res.status(500).json({ error: "Could not load dashboard data" });
+  }
+});
+
+router.get("/superadmin/users", async (_req, res) => {
+  try {
+    const result = await query(`
+      SELECT id, display_name, username, email, avatar_url, is_admin, is_super_admin, created_at
+      FROM users ORDER BY created_at DESC
+    `);
+    res.json(result.rows.map((row) => ({
+      _id: row.id,
+      displayName: row.display_name,
+      username: row.username,
+      email: row.email,
+      avatarUrl: row.avatar_url,
+      isAdmin: row.is_admin,
+      isSuperAdmin: row.is_super_admin,
+      createdAt: row.created_at,
+    })));
+  } catch {
+    res.status(500).json({ error: "Could not load users" });
+  }
+});
+
+router.patch("/superadmin/users/:id/admin", async (req, res) => {
+  const isAdmin = req.body?.isAdmin === true;
+  try {
+    const target = await query(
+      "SELECT id, is_super_admin FROM users WHERE id = $1",
+      [req.params.id],
+    );
+    if (!target.rows[0]) return res.status(404).json({ error: "User not found" });
+    if (target.rows[0].is_super_admin && !isAdmin)
+      return res.status(400).json({ error: "A super administrator cannot be removed here" });
+    const updated = await query(
+      "UPDATE users SET is_admin = $1, updated_at = NOW() WHERE id = $2 RETURNING id, is_admin",
+      [isAdmin, req.params.id],
+    );
+    return res.json({ _id: updated.rows[0].id, isAdmin: updated.rows[0].is_admin });
+  } catch {
+    return res.status(500).json({ error: "Could not update administrator access" });
+  }
+});
+
+router.post("/superadmin/admins", async (req, res) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: "Enter the user's email address" });
+  try {
+    const result = await query(
+      `UPDATE users SET is_admin = TRUE, updated_at = NOW()
+       WHERE LOWER(email) = $1
+       RETURNING id, display_name, username, email, avatar_url, is_admin, is_super_admin, created_at`,
+      [email],
+    );
+    if (!result.rows[0]) {
+      return res.status(404).json({ error: "No registered user has that email. They need to sign in first." });
+    }
+    const row = result.rows[0];
+    return res.status(201).json({
+      _id: row.id,
+      displayName: row.display_name,
+      username: row.username,
+      email: row.email,
+      avatarUrl: row.avatar_url,
+      isAdmin: row.is_admin,
+      isSuperAdmin: row.is_super_admin,
+      createdAt: row.created_at,
+    });
+  } catch {
+    return res.status(500).json({ error: "Could not add administrator" });
+  }
 });
 
 router.post("/upload", upload.single("file"), (req, res) => {

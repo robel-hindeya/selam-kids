@@ -43,6 +43,7 @@ export async function connectPostgres() {
       avatar_url TEXT NOT NULL DEFAULT '',
       legacy_points INTEGER NOT NULL DEFAULT 0,
       is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+      is_super_admin BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
@@ -85,7 +86,24 @@ export async function connectPostgres() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN NOT NULL DEFAULT FALSE;
+    CREATE TABLE IF NOT EXISTS magazine_sales (
+      id TEXT PRIMARY KEY,
+      magazine_id TEXT REFERENCES magazines(id) ON DELETE SET NULL,
+      user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      amount_cents INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
+
+  // This makes it possible to designate the first super administrator without
+  // exposing a public privilege-escalation route. Set SUPERADMIN_EMAIL in env.
+  if (process.env.SUPERADMIN_EMAIL) {
+    await query(
+      "UPDATE users SET is_admin = TRUE, is_super_admin = TRUE WHERE LOWER(email) = LOWER($1)",
+      [process.env.SUPERADMIN_EMAIL.trim()],
+    );
+  }
 
   const [{ rows: bannerCount }, { rows: magazineCount }] = await Promise.all([
     query("SELECT COUNT(*)::int AS count FROM banners"),

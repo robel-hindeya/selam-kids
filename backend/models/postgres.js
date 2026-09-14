@@ -18,6 +18,7 @@ function userDoc(row) {
     avatarUrl: row.avatar_url,
     legacyPoints: row.legacy_points,
     isAdmin: row.is_admin,
+    isSuperAdmin: row.is_super_admin,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

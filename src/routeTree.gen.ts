@@ -16,6 +16,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SuperadminRouteImport } from './routes/superadmin'
 import { Route as StorySlugRouteImport } from './routes/story.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +54,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SuperadminRoute = SuperadminRouteImport.update({
+  id: '/superadmin',
+  path: '/superadmin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StorySlugRoute = StorySlugRouteImport.update({
   id: '/story/$slug',
   path: '/story/$slug',
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
+  '/superadmin': typeof SuperadminRoute
   '/story/$slug': typeof StorySlugRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
+  '/superadmin': typeof SuperadminRoute
   '/story/$slug': typeof StorySlugRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
+  '/superadmin': typeof SuperadminRoute
   '/story/$slug': typeof StorySlugRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/messages'
     | '/profile'
+    | '/superadmin'
     | '/story/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/messages'
     | '/profile'
+    | '/superadmin'
     | '/story/$slug'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/messages'
     | '/profile'
+    | '/superadmin'
     | '/story/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   MessagesRoute: typeof MessagesRoute
   ProfileRoute: typeof ProfileRoute
+  SuperadminRoute: typeof SuperadminRoute
   StorySlugRoute: typeof StorySlugRoute
 }
 
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/superadmin': {
+      id: '/superadmin'
+      path: '/superadmin'
+      fullPath: '/superadmin'
+      preLoaderRoute: typeof SuperadminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/story/$slug': {
       id: '/story/$slug'
       path: '/story/$slug'
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   MessagesRoute: MessagesRoute,
   ProfileRoute: ProfileRoute,
+  SuperadminRoute: SuperadminRoute,
   StorySlugRoute: StorySlugRoute,
 }
 export const routeTree = rootRouteImport
