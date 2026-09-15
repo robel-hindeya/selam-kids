@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import heroReading from "@/assets/hero-reading.jpg";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 type Mode = "login" | "register";
@@ -23,13 +24,18 @@ function AuthPage() {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const error = useMemo(
-    () =>
-      typeof window === "undefined"
-        ? null
-        : new URLSearchParams(window.location.search).get("error"),
-    [],
-  );
+  const error = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    return (
+      searchParams.get("error_description") ||
+      searchParams.get("error") ||
+      hashParams.get("error_description") ||
+      hashParams.get("error")
+    );
+  }, []);
+
   useEffect(() => {
     if (isLoggedIn) void navigate({ to: "/home" });
   }, [isLoggedIn, navigate]);
@@ -49,16 +55,51 @@ function AuthPage() {
       return setMessage("Passwords do not match.");
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/auth/${mode === "login" ? "login" : "register"}`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      if (!response.ok) throw new Error(body?.error || "Something went wrong.");
-      await refreshUser();
-      void navigate({ to: "/profile" });
+      if (isSupabaseConfigured()) {
+        if (mode === "register") {
+          const { data, error: signUpError } = await supabase.auth.signUp({
+            email: form.email.trim().toLowerCase(),
+            password: form.password,
+            options: {
+              data: {
+                display_name: form.displayName.trim(),
+                age: form.age,
+                gender: form.gender,
+                avatar_url: form.avatarUrl,
+              },
+            },
+          });
+          if (signUpError) throw signUpError;
+          if (!data.session) {
+            setMessage(
+              "Account created! Please check your email to confirm your account, then log in.",
+            );
+            setSubmitting(false);
+            return;
+          }
+          await refreshUser();
+          void navigate({ to: "/profile" });
+        } else {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: form.email.trim().toLowerCase(),
+            password: form.password,
+          });
+          if (signInError) throw signInError;
+          await refreshUser();
+          void navigate({ to: "/profile" });
+        }
+      } else {
+        const response = await fetch(`/api/auth/${mode === "login" ? "login" : "register"}`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        if (!response.ok) throw new Error(body?.error || "Something went wrong.");
+        await refreshUser();
+        void navigate({ to: "/profile" });
+      }
     } catch (cause) {
       setMessage(
         cause instanceof Error
@@ -69,6 +110,7 @@ function AuthPage() {
       setSubmitting(false);
     }
   };
+
   const passwordInput = (key: "password" | "confirmPassword", placeholder: string) => (
     <div className="relative">
       <input
@@ -212,11 +254,16 @@ function AuthPage() {
             {(message || error) && (
               <p
                 role="alert"
-                className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm font-bold text-destructive"
+                className={`mt-4 rounded-xl px-4 py-3 text-sm font-bold ${
+                  message && message.includes("Account created")
+                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                    : "bg-destructive/10 text-destructive"
+                }`}
               >
                 {message || error}
               </p>
             )}
+
             <div className="my-6 flex items-center gap-3 text-xs font-bold text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
               OR
             </div>

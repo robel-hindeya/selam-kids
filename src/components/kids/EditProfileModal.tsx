@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 interface EditProfileModalProps {
     onClose: () => void;
@@ -21,6 +22,23 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         setUploading(true);
         setError("");
         try {
+            if (isSupabaseConfigured() && user?._id) {
+                const ext = file.name.split(".").pop() || "png";
+                const filePath = `${user._id}/${Date.now()}.${ext}`;
+                const { error: uploadError } = await supabase.storage
+                    .from("avatars")
+                    .upload(filePath, file, { upsert: true });
+
+                if (!uploadError) {
+                    const { data: publicUrlData } = supabase.storage
+                        .from("avatars")
+                        .getPublicUrl(filePath);
+                    setAvatarPreview(publicUrlData.publicUrl);
+                    return;
+                }
+            }
+
+            // Fallback to local upload endpoint
             const fd = new FormData();
             fd.append("file", file);
             const res = await fetch("/api/upload", { method: "POST", credentials: "include", body: fd });
@@ -38,6 +56,29 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         setSaving(true);
         setError("");
         try {
+            if (isSupabaseConfigured() && user?._id) {
+                const { error: updateError } = await supabase
+                    .from("profiles")
+                    .update({
+                        display_name: displayName.trim(),
+                        username: username.trim().toLowerCase().replace(/[^a-z0-9_.]/g, ""),
+                        avatar_url: avatarPreview,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", user._id);
+
+                if (updateError) {
+                    if (updateError.code === "23505") {
+                        setError("Username already taken. Choose another.");
+                        return;
+                    }
+                    throw updateError;
+                }
+                await refreshUser();
+                onClose();
+                return;
+            }
+
             const body: Record<string, string> = {
                 displayName,
                 username,
