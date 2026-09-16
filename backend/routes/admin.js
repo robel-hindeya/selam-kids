@@ -353,6 +353,27 @@ router.get("/superadmin/activity", requireSuperAdmin, async (_req, res) => {
   }
 });
 
+// ─── Payment management (requireAdmin) ──────────────────────────────────────
+
+// GET /api/admin/payments?status=SUCCESS&search=...&limit=50&offset=0
+router.get("/payments", requireAdmin, async (req, res) => {
+  try {
+    const { listPayments, countPayments } = await import("../lib/chapa/payments.js");
+    const { status = "ALL", search = "", limit = 50, offset = 0 } = req.query || {};
+    const result = await listPayments({
+      status: String(status),
+      search: String(search || "").trim(),
+      limit: Math.min(Math.max(Number(limit) || 50, 1), 200),
+      offset: Math.max(Number(offset) || 0, 0),
+    });
+    const total = await countPayments({ status: String(status) });
+    res.json({ items: result, total, limit, offset });
+  } catch (error) {
+    console.error("Failed to load payments:", error);
+    res.status(500).json({ error: "Could not load payments" });
+  }
+});
+
 // ─── Normal Admin Endpoints (requireAdmin) ──────────────────────────────────
 
 router.post("/upload", requireAdmin, upload.single("file"), (req, res) => {

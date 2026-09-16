@@ -9,6 +9,8 @@ import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/user.js";
 import adminRoutes from "./routes/admin.js";
 import publicRoutes from "./routes/public.js";
+import paymentRoutes from "./routes/payments.js";
+import webhookRoutes from "./routes/webhooks.js";
 import fs from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -26,7 +28,16 @@ app.use(
 );
 // Registration can include a small profile-picture data URL. Express defaults
 // to 100 KB, which rejects normal phone photos before the auth route runs.
-app.use(express.json({ limit: "4mb" }));
+// The `verify` callback captures the raw body so Chapa webhook signatures
+// (HMAC-SHA256 over the raw payload) can be validated exactly as sent.
+app.use(
+  express.json({
+    limit: "4mb",
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
 app.use(cookieParser());
 app.use(passport.initialize());
 app.use(express.static(path.join(ROOT, "public")));
@@ -42,6 +53,8 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/webhooks", webhookRoutes);
 app.use("/api", publicRoutes);
 app.use("/api", userRoutes);
 

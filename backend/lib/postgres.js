@@ -64,10 +64,12 @@ export async function connectPostgres() {
       fun_fact TEXT NOT NULL DEFAULT '',
       target_url TEXT NOT NULL DEFAULT '',
       story_images JSONB NOT NULL DEFAULT '[]'::jsonb,
+      price_cents INTEGER NOT NULL DEFAULT 5000,
       active BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE magazines ADD COLUMN IF NOT EXISTS price_cents INTEGER NOT NULL DEFAULT 5000;
     CREATE TABLE IF NOT EXISTS banners (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -112,6 +114,47 @@ export async function connectPostgres() {
       amount_cents INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS orders (
+      id TEXT PRIMARY KEY,
+      user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      order_type TEXT NOT NULL DEFAULT 'magazine_purchase',
+      product_id TEXT,
+      product_title TEXT NOT NULL DEFAULT '',
+      amount_cents INTEGER NOT NULL DEFAULT 0,
+      currency TEXT NOT NULL DEFAULT 'ETB',
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders (user_id);
+    CREATE INDEX IF NOT EXISTS idx_orders_status ON orders (status);
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY,
+      order_id TEXT REFERENCES orders(id) ON DELETE SET NULL,
+      user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      tx_ref TEXT UNIQUE NOT NULL,
+      chapa_transaction_id TEXT,
+      amount_cents INTEGER NOT NULL DEFAULT 0,
+      currency TEXT NOT NULL DEFAULT 'ETB',
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      payment_method TEXT,
+      customer_email TEXT,
+      customer_phone TEXT,
+      first_name TEXT NOT NULL DEFAULT '',
+      last_name TEXT NOT NULL DEFAULT '',
+      checkout_url TEXT,
+      failure_reason TEXT,
+      metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      paid_at TIMESTAMPTZ,
+      verified_at TIMESTAMPTZ,
+      webhook_received_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments (user_id);
+    CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments (order_id);
+    CREATE INDEX IF NOT EXISTS idx_payments_status ON payments (status);
   `);
 
   // This makes it possible to designate the first super administrator without
@@ -154,8 +197,8 @@ export async function connectPostgres() {
     for (const magazine of readJson("magazines.json")) {
       await query(
         `INSERT INTO magazines
-          (id, title, description, cover_url, minutes, likes, edition, category, date, paragraphs, fun_fact, target_url, story_images, active, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13::jsonb, $14, $15)
+          (id, title, description, cover_url, minutes, likes, edition, category, date, paragraphs, fun_fact, target_url, story_images, price_cents, active, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13::jsonb, $14, $15, $16)
          ON CONFLICT (id) DO NOTHING`,
         [
           magazine._id,
@@ -171,6 +214,7 @@ export async function connectPostgres() {
           magazine.funFact ?? "",
           magazine.targetUrl ?? "",
           JSON.stringify(magazine.storyImages ?? []),
+          Number(magazine.priceCents ?? magazine.price ?? 5000),
           magazine.active !== false,
           magazine.createdAt || new Date(),
         ],

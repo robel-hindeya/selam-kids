@@ -67,6 +67,7 @@ function contentDoc(row, type) {
     funFact: row.fun_fact,
     targetUrl: row.target_url,
     storyImages: row.story_images,
+    priceCents: row.price_cents,
     active: row.active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -102,7 +103,7 @@ function makeContentModel(type) {
       ? "id, title, kicker, image_url, magazine_id, active, display_order, created_at, updated_at"
       : type === "feedback"
         ? "id, type, message, image_url, family_name, kid_username, user_id, created_at, updated_at"
-        : "id, title, description, cover_url, minutes, likes, edition, category, date, paragraphs, fun_fact, target_url, story_images, active, created_at, updated_at";
+        : "id, title, description, cover_url, minutes, likes, edition, category, date, paragraphs, fun_fact, target_url, story_images, price_cents, active, created_at, updated_at";
 
   const find = (filter = {}) =>
     new Query(async (sort, populateUser) => {
@@ -176,6 +177,7 @@ function makeContentModel(type) {
               funFact: "fun_fact",
               targetUrl: "target_url",
               storyImages: "story_images",
+              priceCents: "price_cents",
               active: "active",
             };
       const entries = Object.entries(data).filter(([key]) => allowed[key]);
@@ -230,7 +232,7 @@ function makeContentModel(type) {
         return contentDoc(result.rows[0], type);
       }
       const result = await query(
-        `INSERT INTO magazines (id, title, description, cover_url, minutes, likes, edition, category, date, paragraphs, fun_fact, target_url, story_images, active, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12,$13::jsonb,$14,$15) RETURNING ${fields}`,
+        `INSERT INTO magazines (id, title, description, cover_url, minutes, likes, edition, category, date, paragraphs, fun_fact, target_url, story_images, price_cents, active, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12,$13::jsonb,$14,$15,$16) RETURNING ${fields}`,
         [
           id(),
           data.title,
@@ -245,6 +247,7 @@ function makeContentModel(type) {
           data.funFact ?? "",
           data.targetUrl ?? "",
           json(data.storyImages),
+          Number(data.priceCents ?? 5000),
           true,
           now,
         ],

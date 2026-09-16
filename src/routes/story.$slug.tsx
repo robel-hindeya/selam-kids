@@ -12,6 +12,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
+import { PayWithChapa } from "@/components/kids/PayWithChapa";
+import { formatBirr } from "@/lib/payments";
 type Story = {
   slug: string;
   image: string;
@@ -26,12 +28,16 @@ type Story = {
   paragraphs: string[];
   funFact: string;
   edition?: string;
+  priceCents?: number;
 };
 
 export const Route = createFileRoute("/story/$slug")({
   loader: () => ({ story: null }),
   head: () => ({
-    meta: [{ title: "Story — Selam Kids" }, { name: "description", content: "Read a Selam Kids story." }],
+    meta: [
+      { title: "Story — Selam Kids" },
+      { name: "description", content: "Read a Selam Kids story." },
+    ],
   }),
   notFoundComponent: StoryNotFound,
   component: StoryPage,
@@ -92,6 +98,7 @@ function StoryPage() {
             : [magazine.description || "This story is ready to be explored."],
           funFact: magazine.funFact || "Every story teaches us something new.",
           edition: magazine.edition || "New Edition",
+          priceCents: magazine.priceCents ?? 5000,
         });
       })
       .finally(() => setLoading(false));
@@ -100,7 +107,9 @@ function StoryPage() {
   const story = dynamicStory;
 
   if (loading) {
-    return <div className="min-h-screen bg-background p-8 text-center font-bold">Loading story...</div>;
+    return (
+      <div className="min-h-screen bg-background p-8 text-center font-bold">Loading story...</div>
+    );
   }
   if (!story) return <StoryNotFound />;
 
@@ -243,6 +252,29 @@ function StoryPage() {
                   <p className="mt-1 text-sm">{story.funFact}</p>
                 </div>
               </div>
+
+              {slug.startsWith("mag-") && typeof story.priceCents === "number" && (
+                <div className="mt-6 flex flex-col items-center gap-3 rounded-4xl bg-primary/10 p-6 text-center shadow-[var(--shadow-soft)] sm:flex-row sm:justify-between sm:text-left">
+                  <div>
+                    <p className="font-display text-lg font-extrabold">Get this magazine</p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      Add it to your library forever — {formatBirr(story.priceCents / 100)}.
+                    </p>
+                  </div>
+                  <PayWithChapa
+                    product={{
+                      id: slug.slice(4),
+                      title: story.title,
+                      description: story.description,
+                      priceCents: story.priceCents,
+                      currency: "ETB",
+                      coverUrl: story.image,
+                    }}
+                    triggerLabel={`Buy · ${formatBirr(story.priceCents / 100)}`}
+                    className="font-display rounded-full px-6"
+                  />
+                </div>
+              )}
             </div>
           </article>
         </div>

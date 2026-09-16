@@ -18,6 +18,7 @@ import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SuperadminRouteImport } from './routes/superadmin'
 import { Route as StorySlugRouteImport } from './routes/story.$slug'
+import { Route as PaymentStatusTxRefRouteImport } from './routes/payment/status.$txRef'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const StorySlugRoute = StorySlugRouteImport.update({
   path: '/story/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PaymentStatusTxRefRoute = PaymentStatusTxRefRouteImport.update({
+  id: '/payment/status/$txRef',
+  path: '/payment/status/$txRef',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/superadmin': typeof SuperadminRoute
   '/story/$slug': typeof StorySlugRoute
+  '/payment/status/$txRef': typeof PaymentStatusTxRefRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/superadmin': typeof SuperadminRoute
   '/story/$slug': typeof StorySlugRoute
+  '/payment/status/$txRef': typeof PaymentStatusTxRefRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/superadmin': typeof SuperadminRoute
   '/story/$slug': typeof StorySlugRoute
+  '/payment/status/$txRef': typeof PaymentStatusTxRefRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/superadmin'
     | '/story/$slug'
+    | '/payment/status/$txRef'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/superadmin'
     | '/story/$slug'
+    | '/payment/status/$txRef'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/superadmin'
     | '/story/$slug'
+    | '/payment/status/$txRef'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   SuperadminRoute: typeof SuperadminRoute
   StorySlugRoute: typeof StorySlugRoute
+  PaymentStatusTxRefRoute: typeof PaymentStatusTxRefRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/payment/status/$txRef': {
+      id: '/payment/status/$txRef'
+      path: '/payment/status/$txRef'
+      fullPath: '/payment/status/$txRef'
+      preLoaderRoute: typeof PaymentStatusTxRefRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   SuperadminRoute: SuperadminRoute,
   StorySlugRoute: StorySlugRoute,
+  PaymentStatusTxRefRoute: PaymentStatusTxRefRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

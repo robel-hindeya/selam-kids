@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import { Download, ImagePlus, LogOut, Pencil, Shield } from "lucide-react";
+import { Download, ImagePlus, LogOut, Pencil, Shield, CreditCard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import type { AdminPaymentItem, PaymentStatus } from "@/lib/payments";
 
 export const Route = createFileRoute("/admin")({
     head: () => ({
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/admin")({
 function AdminDashboard() {
     const { user, isLoggedIn, loading, logout } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<"magazines" | "banners" | "feedback">("magazines");
+    const [activeTab, setActiveTab] = useState<"magazines" | "banners" | "feedback" | "payments">("magazines");
 
     useEffect(() => {
         if (!loading) {
@@ -92,8 +93,8 @@ function AdminDashboard() {
                     </div>
                 </header>
 
-                <div className="flex gap-4 mb-8">
-                    {(["magazines", "banners", "feedback"] as const).map((tab) => (
+                <div className="flex gap-4 mb-8 flex-wrap">
+                    {(["magazines", "banners", "feedback", "payments"] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -102,7 +103,13 @@ function AdminDashboard() {
                                 : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200"
                                 }`}
                         >
-                            {tab}
+                            {tab === "payments" ? (
+                                <span className="inline-flex items-center gap-1.5">
+                                    <CreditCard className="size-4" /> {tab}
+                                </span>
+                            ) : (
+                                tab
+                            )}
                         </button>
                     ))}
                 </div>
@@ -111,6 +118,7 @@ function AdminDashboard() {
                     {activeTab === "magazines" && <MagazinesTab />}
                     {activeTab === "banners" && <BannersTab />}
                     {activeTab === "feedback" && <FeedbackTab />}
+                    {activeTab === "payments" && <PaymentsTab />}
                 </main>
             </div>
         </div>
@@ -656,6 +664,222 @@ function FeedbackTab() {
                     );
                 })}
             </div>
+        </div>
+    );
+}
+
+// ─── Payments Tab ───────────────────────────────────────────────────────────
+function PaymentsTab() {
+    const [payments, setPayments] = useState<AdminPaymentItem[]>([]);
+    const [total, setTotal] = useState(0);
+    const [statusFilter, setStatusFilter] = useState("");
+    const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [limit] = useState(25);
+    const [offset, setOffset] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search.trim()), 350);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    useEffect(() => {
+        setOffset(0);
+    }, [statusFilter, debouncedSearch]);
+
+    const fetchPayments = async (status: string, term: string, currentOffset: number) => {
+        setLoading(true);
+        setError("");
+        try {
+            const params = new URLSearchParams({ limit: String(limit), offset: String(currentOffset) });
+            if (status) params.set("status", status);
+            if (term) params.set("search", term);
+            const res = await fetch(`/api/admin/payments?${params.toString()}`, { credentials: "include" });
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string };
+                throw new Error(body.error || "Failed to load payments");
+            }
+            const data = (await res.json()) as { items: AdminPaymentItem[]; total: number; limit: number; offset: number };
+            setPayments(data.items);
+            setTotal(data.total);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to load payments");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        void fetchPayments(statusFilter, debouncedSearch, offset);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [statusFilter, debouncedSearch, offset, limit]);
+
+    const formatDate = (dateStr?: string | null) => {
+        if (!dateStr) return "—";
+        try {
+            return new Date(dateStr).toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+            });
+        } catch {
+            return dateStr;
+        }
+    };
+
+    const formatAmount = (amount: number, currency: string) => {
+        const value = Number(amount || 0);
+        return `${currency || "ETB"} ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    const badges: Partial<Record<PaymentStatus, string>> = {
+        PENDING: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+        PROCESSING: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+        SUCCESS: "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
+        FAILED: "bg-red-500/20 text-red-400 border border-red-500/30",
+        CANCELLED: "bg-neutral-500/20 text-neutral-400 border border-neutral-500/30",
+        EXPIRED: "bg-neutral-500/20 text-neutral-400 border border-neutral-500/30",
+        REFUNDED: "bg-orange-500/20 text-orange-400 border border-orange-500/30",
+    };
+
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const currentPage = Math.floor(offset / limit) + 1;
+
+    return (
+        <div>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h2 className="text-xl font-bold text-white">Chapa Payments</h2>
+                <div className="text-sm text-neutral-400 font-semibold">
+                    {total} total
+                </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+                <input
+                    type="search"
+                    placeholder="Search tx_ref, email, name..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="min-w-52 rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                />
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                >
+                    <option value="">All statuses</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="PROCESSING">Processing</option>
+                    <option value="SUCCESS">Success</option>
+                    <option value="FAILED">Failed</option>
+                    <option value="CANCELLED">Cancelled</option>
+                    <option value="EXPIRED">Expired</option>
+                    <option value="REFUNDED">Refunded</option>
+                </select>
+            </div>
+
+            {error && (
+                <p className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm font-semibold text-red-400">
+                    {error}
+                </p>
+            )}
+
+            <div className="overflow-x-auto rounded-xl border border-neutral-800 bg-neutral-900">
+                <table className="w-full text-left text-sm">
+                    <thead>
+                        <tr className="border-b border-neutral-800 text-xs uppercase tracking-wider text-neutral-500">
+                            <th className="px-4 py-3">Payment</th>
+                            <th className="px-4 py-3">Tx Ref</th>
+                            <th className="px-4 py-3">Item</th>
+                            <th className="px-4 py-3">Customer</th>
+                            <th className="px-4 py-3">Amount</th>
+                            <th className="px-4 py-3">Method</th>
+                            <th className="px-4 py-3">Status</th>
+                            <th className="px-4 py-3">Created</th>
+                            <th className="px-4 py-3">Paid</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading && payments.length === 0 ? (
+                            <tr>
+                                <td colSpan={9} className="px-4 py-8 text-center text-neutral-500">
+                                    Loading payments...
+                                </td>
+                            </tr>
+                        ) : payments.length === 0 ? (
+                            <tr>
+                                <td colSpan={9} className="px-4 py-8 text-center text-neutral-500">
+                                    No payments found.
+                                </td>
+                            </tr>
+                        ) : (
+                            payments.map((p) => (
+                                <tr key={p.id} className="border-b border-neutral-800/70 hover:bg-neutral-800/40">
+                                    <td className="px-4 py-3 font-mono text-xs text-neutral-300">
+                                        {p.paymentId.slice(0, 10)}…
+                                    </td>
+                                    <td className="px-4 py-3 font-mono text-xs text-white">
+                                        {p.txRef}
+                                    </td>
+                                    <td className="px-4 py-3 text-neutral-300">
+                                        {p.productTitle || "—"}
+                                    </td>
+                                    <td className="px-4 py-3 text-neutral-300">
+                                        {p.customer?.displayName || p.customer?.username || p.customerEmail || "—"}
+                                    </td>
+                                    <td className="px-4 py-3 font-semibold text-neutral-100">
+                                        {formatAmount(p.amount, p.currency)}
+                                    </td>
+                                    <td className="px-4 py-3 text-neutral-400">
+                                        {p.paymentMethod || "—"}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-bold ${badges[p.status] || "bg-neutral-500/20 text-neutral-400 border border-neutral-500/30"}`}>
+                                            {p.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-xs text-neutral-400">
+                                        {formatDate(p.createdAt)}
+                                    </td>
+                                    <td className="px-4 py-3 text-xs text-neutral-400">
+                                        {formatDate(p.paidAt)}
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {totalPages > 1 && (
+                <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs text-neutral-500 font-semibold">
+                        Page {currentPage} of {totalPages}
+                    </span>
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            disabled={offset === 0}
+                            onClick={() => setOffset((o) => Math.max(0, o - limit))}
+                            className="rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-bold text-neutral-300 hover:bg-neutral-700 disabled:opacity-40"
+                        >
+                            Prev
+                        </button>
+                        <button
+                            type="button"
+                            disabled={offset + limit >= total}
+                            onClick={() => setOffset((o) => o + limit)}
+                            className="rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-bold text-neutral-300 hover:bg-neutral-700 disabled:opacity-40"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
