@@ -44,7 +44,7 @@ router.get("/me", requireAuth, async (req, res) => {
 // PATCH /api/me — update profile fields
 router.patch("/me", requireAuth, async (req, res) => {
     try {
-        const { displayName, username, gender, age, avatarUrl } = req.body;
+        const { displayName, username, gender, age, avatarUrl, role } = req.body;
         const updates = {};
 
         if (displayName !== undefined) updates.displayName = String(displayName).trim();
@@ -60,6 +60,7 @@ router.patch("/me", requireAuth, async (req, res) => {
         if (gender !== undefined) updates.gender = gender;
         if (age !== undefined) updates.age = Number(age);
         if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+        if (role !== undefined) updates.role = role === "Family" ? "Family" : "Kid";
 
         const user = await User.findByIdAndUpdate(req.userId, updates, { new: true }).lean();
         res.json(user);

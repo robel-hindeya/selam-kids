@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import { ImagePlus, Pencil } from "lucide-react";
+import { Download, ImagePlus, LogOut, Pencil, Shield } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/admin")({
     head: () => ({
@@ -16,13 +17,79 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminDashboard() {
+    const { user, isLoggedIn, loading, logout } = useAuth();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<"magazines" | "banners" | "feedback">("magazines");
+
+    useEffect(() => {
+        if (!loading) {
+            if (!isLoggedIn) {
+                void navigate({ to: "/auth" });
+            } else if (user && !user.isAdmin && !user.isSuperAdmin) {
+                void navigate({ to: "/home" });
+            }
+        }
+    }, [loading, isLoggedIn, user, navigate]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-neutral-400 font-sans">
+                <div className="flex items-center gap-3">
+                    <span className="size-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span>Loading Admin Dashboard...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isLoggedIn || (user && !user.isAdmin && !user.isSuperAdmin)) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen bg-neutral-950 p-6 text-neutral-200 font-sans">
             <div className="mx-auto max-w-5xl">
-                <header className="mb-8 flex items-center justify-between border-b border-neutral-800 pb-4">
-                    <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+                <header className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800 pb-4">
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+                        {user?.isSuperAdmin && (
+                            <Link
+                                to="/superadmin"
+                                className="text-xs bg-violet-600/20 text-violet-400 border border-violet-500/30 px-3 py-1 rounded-full font-bold hover:bg-violet-600 hover:text-white transition-colors"
+                            >
+                                Super Admin →
+                            </Link>
+                        )}
+                    </div>
+
+                    {/* Top-Right Corner: Logged-in Admin username & role */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2.5 rounded-xl border border-neutral-800 bg-neutral-900 px-3.5 py-2">
+                            <span className="grid size-7 place-items-center rounded-full bg-blue-500/20 text-xs font-bold text-blue-400">
+                                {(user?.username || user?.displayName || "A").slice(0, 1).toUpperCase()}
+                            </span>
+                            <div className="flex flex-col text-left">
+                                <span className="text-xs font-bold text-white">
+                                    @{user?.username || user?.displayName || "admin"}
+                                </span>
+                                <span className="text-[10px] font-semibold text-neutral-400">
+                                    {user?.isSuperAdmin ? "Super Admin" : "Normal Admin"}
+                                </span>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                await logout();
+                                void navigate({ to: "/auth" });
+                            }}
+                            title="Log out"
+                            className="flex items-center gap-1.5 rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs font-semibold text-neutral-400 hover:bg-neutral-800 hover:text-red-400 transition-colors"
+                        >
+                            <LogOut className="size-3.5" />
+                            <span className="hidden sm:inline">Logout</span>
+                        </button>
+                    </div>
                 </header>
 
                 <div className="flex gap-4 mb-8">
@@ -57,6 +124,37 @@ async function uploadFile(file: File) {
     const res = await fetch("/api/admin/upload", { method: "POST", credentials: "include", body: fd });
     if (!res.ok) throw new Error("Upload failed");
     return (await res.json()) as { url: string };
+}
+
+// ─── Shared File Download helper ───
+async function downloadImage(url: string, fallbackName = "feedback-image") {
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Download request failed");
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        const cleanName = url.split("?")[0].split("#")[0].split("/").pop();
+        let filename = cleanName || fallbackName;
+        if (!filename.includes(".")) {
+            const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") || "png";
+            filename = `${filename}.${ext}`;
+        }
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+    } catch {
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.download = url.split("?")[0].split("#")[0].split("/").pop() || fallbackName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
 }
 
 // ─── Magazines Tab ───────────────────────────────────────────────────────────
@@ -462,38 +560,101 @@ function FeedbackTab() {
         return type === "God" ? "bg-purple-500/20 text-purple-400" : type === "Drawing" ? "bg-orange-500/20 text-orange-400" : "bg-emerald-500/20 text-emerald-400";
     };
 
+    const formatDate = (dateStr?: string) => {
+        if (!dateStr) return "";
+        try {
+            const d = new Date(dateStr);
+            return d.toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+            });
+        } catch {
+            return dateStr;
+        }
+    };
+
     return (
         <div>
             <h2 className="text-xl font-bold text-white mb-4">User Feedback & Messages</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {feedback.map((f) => (
-                    <div key={f._id} className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 flex flex-col">
-                        <div className="flex items-start justify-between mb-3">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getBadgeColor(f.type)}`}>
-                                {f.type}
-                            </span>
-                            <button onClick={() => handleDelete(f._id)} className="text-neutral-500 hover:text-red-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
-                            </button>
-                        </div>
+                {feedback.map((f) => {
+                    const role = f.userId?.role || (f.type === "Family" ? "Family" : "Kid");
+                    const username = f.userId?.username
+                        ? `@${f.userId.username}`
+                        : f.kidUsername
+                        ? (f.kidUsername.startsWith("@") ? f.kidUsername : `@${f.kidUsername}`)
+                        : (f.userId?.displayName || "Anonymous");
 
-                        {f.imageUrl && (
-                            <img src={f.imageUrl} alt="Attached" className="w-full h-32 object-cover rounded-lg mb-3" />
-                        )}
+                    return (
+                        <div key={f._id} className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 flex flex-col">
+                            <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getBadgeColor(f.type)}`}>
+                                        {f.type}
+                                    </span>
+                                    <span
+                                        className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                                            role.toLowerCase() === "family"
+                                                ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                                : "bg-sky-500/20 text-sky-300 border border-sky-500/30"
+                                        }`}
+                                    >
+                                        {role}
+                                    </span>
+                                </div>
+                                <button onClick={() => handleDelete(f._id)} className="text-neutral-500 hover:text-red-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+                                </button>
+                            </div>
 
-                        <p className="text-sm text-neutral-300 italic mb-4">"{f.message}"</p>
-
-                        <div className="mt-auto pt-3 border-t border-neutral-800 text-xs text-neutral-500 font-semibold">
-                            {f.type === "Family" ? (
-                                <>Family: {f.familyName} (Kid: {f.kidUsername})</>
-                            ) : f.userId ? (
-                                <>Sent by {f.userId.displayName}</>
-                            ) : (
-                                <>Anonymous</>
+                            {f.imageUrl && (
+                                <div className="relative mb-3 group overflow-hidden rounded-lg">
+                                    <img src={f.imageUrl} alt="Attached" className="w-full h-32 object-cover rounded-lg" />
+                                    <button
+                                        type="button"
+                                        onClick={() => downloadImage(f.imageUrl, `feedback-${f._id}`)}
+                                        title="Download image"
+                                        aria-label="Download image"
+                                        className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-md bg-neutral-950/80 text-neutral-300 backdrop-blur-xs border border-neutral-700/60 shadow-md hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all hover:scale-105 cursor-pointer"
+                                    >
+                                        <Download className="size-3.5" />
+                                    </button>
+                                </div>
                             )}
+
+                            <p className="text-sm text-neutral-300 italic mb-4">"{f.message}"</p>
+
+                            <div className="mt-auto pt-3 border-t border-neutral-800 space-y-1.5 text-xs text-neutral-400 font-semibold">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <span className="text-neutral-500 font-normal">Username:</span>
+                                        <span className="text-white font-bold truncate">{username}</span>
+                                    </div>
+                                    <div className="text-[11px] text-neutral-400 font-normal shrink-0">
+                                        {formatDate(f.createdAt)}
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2 text-[11px]">
+                                    <div>
+                                        <span className="text-neutral-500 font-normal">Role: </span>
+                                        <span className={role.toLowerCase() === "family" ? "text-amber-400 font-bold" : "text-sky-400 font-bold"}>
+                                            {role}
+                                        </span>
+                                    </div>
+                                    {f.type === "Family" && f.familyName && (
+                                        <div className="text-neutral-400 font-normal truncate">
+                                            <span className="text-neutral-500">Family:</span> {f.familyName}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

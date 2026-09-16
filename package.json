@@ -7,9 +7,9 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "concurrently \"vite dev\" \"node backend/index.js\"",
+    "dev": "concurrently \"vite dev\" \"node --watch backend/index.js\"",
     "dev:frontend": "vite dev",
-    "dev:backend": "node backend/index.js",
+    "dev:backend": "node --watch backend/index.js",
     "start": "node backend/index.js",
     "build": "vite build",
     "build:dev": "vite build --mode development",

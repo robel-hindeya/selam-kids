@@ -18,6 +18,11 @@ export interface AuthUser {
   age?: number;
   avatarUrl: string;
   legacyPoints: number;
+  role?: string;
+  isAdmin?: boolean;
+  isSuperAdmin?: boolean;
+  accountType?: string;
+  isDisabled?: boolean;
 }
 
 interface AuthContextValue {
@@ -35,7 +40,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Helper to load Supabase profile and ensure it is synced in public.profiles
+  // Helper to load Legacy/Express backend user
+  const fetchLegacyUser = useCallback(async () => {
+    try {
+      const res = await fetch("/api/me", { credentials: "include" });
+      if (res.ok) {
+        const data = (await res.json()) as AuthUser;
+        setUser(data);
+        return data;
+      } else {
+        setUser(null);
+        return null;
+      }
+    } catch {
+      setUser(null);
+      return null;
+    }
+  }, []);
+
+  // Helper to load Supabase profile and ensure it is synced in backend & postgres
   const fetchSupabaseUser = useCallback(async () => {
     try {
       const {
@@ -44,8 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } = await supabase.auth.getSession();
 
       if (sessionError || !session?.user) {
-        setUser(null);
-        return;
+        return await fetchLegacyUser();
       }
 
       const supaUser = session.user;
@@ -64,25 +86,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         (meta["picture"] as string) ||
         "";
 
-      // Query profiles table
+      const cleanBase = (
+        (meta["username"] as string) ||
+        fullName ||
+        supaUser.email?.split("@")[0] ||
+        "reader"
+      )
+        .toLowerCase()
+        .replace(/[^a-z0-9_.]/g, "")
+        .slice(0, 20);
+
+      const isGoogle = Boolean(
+        avatarUrl.includes("googleusercontent.com") ||
+        avatarUrl.includes("lh3.google") ||
+        meta["iss"] === "https://accounts.google.com" ||
+        supaUser.app_metadata?.provider === "google"
+      );
+
+      // Query profiles table in Supabase
       let { data: profile } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", supaUser.id)
         .maybeSingle();
 
-      // If profile does not exist yet (e.g. before trigger finishes), create or update it
       if (!profile) {
-        const cleanBase = (
-          (meta["username"] as string) ||
-          fullName ||
-          supaUser.email?.split("@")[0] ||
-          "reader"
-        )
-          .toLowerCase()
-          .replace(/[^a-z0-9_.]/g, "")
-          .slice(0, 20);
-
         const { data: newProfile } = await supabase
           .from("profiles")
           .upsert(
@@ -105,12 +133,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // Synchronize with Express backend to establish token cookie & get real PostgreSQL permissions
+      try {
+        const syncRes = await fetch("/api/auth/session", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: supaUser.id,
+            email: supaUser.email,
+            displayName: fullName,
+            avatarUrl: profile?.avatar_url || avatarUrl,
+            username: profile?.username || cleanBase || "reader",
+            accountType: isGoogle ? "Google" : "Email",
+          }),
+        });
+
+        if (syncRes.ok) {
+          const syncData = await syncRes.json();
+          if (syncData?.user) {
+            setUser(syncData.user);
+            return syncData.user;
+          }
+        }
+      } catch (syncErr) {
+        console.warn("Backend session sync warning:", syncErr);
+      }
+
       const authUser: AuthUser = {
         _id: supaUser.id,
         username:
           profile?.username ||
           (meta["username"] as string) ||
-          supaUser.email?.split("@")[0] ||
+          cleanBase ||
           "reader",
         email: supaUser.email || (profile?.email as string) || "",
         displayName:
@@ -128,33 +183,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           profile?.avatar_url ||
           avatarUrl,
         legacyPoints: profile?.legacy_points ?? 0,
+        role: (profile?.role as string) || (meta["role"] as string) || "Kid",
+        isAdmin: Boolean(profile?.is_admin),
+        isSuperAdmin: Boolean(profile?.is_super_admin),
+        accountType: isGoogle ? "Google" : "Email",
       };
 
       setUser(authUser);
+      return authUser;
     } catch (err) {
       console.error("Failed to load Supabase user:", err);
-      setUser(null);
+      return await fetchLegacyUser();
     }
-  }, []);
-
-  // Helper to load Legacy/Express backend user
-  const fetchLegacyUser = useCallback(async () => {
-    try {
-      const res = await fetch("/api/me", { credentials: "include" });
-      if (res.ok) {
-        const data = (await res.json()) as AuthUser;
-        setUser(data);
-      } else {
-        setUser(null);
-      }
-    } catch {
-      setUser(null);
-    }
-  }, []);
+  }, [fetchLegacyUser]);
 
   const refreshUser = useCallback(async () => {
     if (isSupabaseConfigured()) {
-      await fetchSupabaseUser();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) {
+        await fetchSupabaseUser();
+      } else {
+        await fetchLegacyUser();
+      }
     } else {
       await fetchLegacyUser();
     }
@@ -164,12 +216,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     async function initAuth() {
-      if (isSupabaseConfigured()) {
-        await fetchSupabaseUser();
-      } else {
-        await fetchLegacyUser();
+      setLoading(true);
+      try {
+        if (isSupabaseConfigured()) {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session?.user) {
+            await fetchSupabaseUser();
+          } else {
+            await fetchLegacyUser();
+          }
+        } else {
+          await fetchLegacyUser();
+        }
+      } catch (err) {
+        console.error("initAuth error:", err);
+        if (mounted) setUser(null);
+      } finally {
+        if (mounted) setLoading(false);
       }
-      if (mounted) setLoading(false);
     }
 
     void initAuth();
@@ -177,14 +243,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen to real-time auth changes (sign in, sign out, token refresh)
     let authListener: { subscription: { unsubscribe: () => void } } | null = null;
     if (isSupabaseConfigured()) {
-      const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (!mounted) return;
+        if (event === "SIGNED_OUT") {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
         if (session?.user) {
           await fetchSupabaseUser();
         } else {
-          setUser(null);
+          await fetchLegacyUser();
         }
-        setLoading(false);
+        if (mounted) setLoading(false);
       });
       authListener = data;
     }
@@ -221,10 +292,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       if (isSupabaseConfigured()) {
-        await supabase.auth.signOut();
-      } else {
-        await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        await supabase.auth.signOut().catch(() => {});
       }
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" }).catch(() => {});
     } finally {
       setUser(null);
       window.location.href = "/auth";

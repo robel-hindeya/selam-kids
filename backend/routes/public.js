@@ -1,4 +1,5 @@
 import { Router } from "express";
+import jwt from "jsonwebtoken";
 import { Magazine, Banner, Feedback } from "../models/Content.js";
 
 const router = Router();
@@ -31,7 +32,14 @@ router.get("/magazines/:id", async (req, res) => {
 
 router.post("/feedback", async (req, res) => {
   try {
-    await Feedback.create({ ...req.body, userId: req.body.userId ?? null });
+    let userId = req.body?.userId || null;
+    if (!userId && req.cookies?.token) {
+      try {
+        const decoded = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
+        if (decoded?.userId) userId = decoded.userId;
+      } catch {}
+    }
+    await Feedback.create({ ...req.body, userId });
     res.status(201).json({ success: true });
   } catch {
     res.status(400).json({ error: "Failed to submit feedback" });

@@ -9,7 +9,7 @@ export const Route = createFileRoute("/auth")({ component: AuthPage });
 type Mode = "login" | "register";
 
 function AuthPage() {
-  const { isLoggedIn, login, refreshUser } = useAuth();
+  const { isLoggedIn, user, login, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("register");
   const [form, setForm] = useState({
@@ -20,6 +20,7 @@ function AuthPage() {
     age: "",
     gender: "",
     avatarUrl: "",
+    role: "Kid",
   });
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -37,8 +38,12 @@ function AuthPage() {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn) void navigate({ to: "/home" });
-  }, [isLoggedIn, navigate]);
+    if (isLoggedIn && user) {
+      if (user.isSuperAdmin) void navigate({ to: "/superadmin" });
+      else if (user.isAdmin) void navigate({ to: "/admin" });
+      else void navigate({ to: "/home" });
+    }
+  }, [isLoggedIn, user, navigate]);
   const update = (key: keyof typeof form, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
   const selectPhoto = (file?: File) => {
@@ -55,8 +60,61 @@ function AuthPage() {
       return setMessage("Passwords do not match.");
     setSubmitting(true);
     try {
-      if (isSupabaseConfigured()) {
-        if (mode === "register") {
+      if (mode === "login") {
+        let loginSuccess = false;
+        let loggedUser: any = null;
+
+        // 1. Try Express backend login (supports created admins, usernames, and PostgreSQL credentials)
+        try {
+          const response = await fetch("/api/auth/login", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: form.email.trim(),
+              username: form.email.trim(),
+              password: form.password,
+            }),
+          });
+          const body = await response.json().catch(() => null);
+          if (response.ok && body?.user) {
+            loginSuccess = true;
+            loggedUser = body.user;
+          } else if (response.status === 403) {
+            throw new Error(body?.error || "Account disabled. Please contact administrator.");
+          }
+        } catch (backendErr) {
+          if (backendErr instanceof Error && backendErr.message.includes("Account disabled")) {
+            throw backendErr;
+          }
+        }
+
+        // 2. If not logged in yet and Supabase is configured and input looks like an email
+        if (!loginSuccess && isSupabaseConfigured() && form.email.includes("@")) {
+          const { data: supaData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: form.email.trim().toLowerCase(),
+            password: form.password,
+          });
+          if (!signInError && supaData?.user) {
+            loginSuccess = true;
+          }
+        }
+
+        if (!loginSuccess) {
+          throw new Error("Incorrect username/email or password.");
+        }
+
+        await refreshUser();
+        if (loggedUser?.isSuperAdmin) {
+          void navigate({ to: "/superadmin" });
+        } else if (loggedUser?.isAdmin) {
+          void navigate({ to: "/admin" });
+        } else {
+          void navigate({ to: "/home" });
+        }
+      } else {
+        // Register mode
+        if (isSupabaseConfigured()) {
           const { data, error: signUpError } = await supabase.auth.signUp({
             email: form.email.trim().toLowerCase(),
             password: form.password,
@@ -66,6 +124,7 @@ function AuthPage() {
                 age: form.age,
                 gender: form.gender,
                 avatar_url: form.avatarUrl,
+                role: form.role,
               },
             },
           });
@@ -78,27 +137,19 @@ function AuthPage() {
             return;
           }
           await refreshUser();
-          void navigate({ to: "/profile" });
+          void navigate({ to: "/home" });
         } else {
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email: form.email.trim().toLowerCase(),
-            password: form.password,
+          const response = await fetch("/api/auth/register", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(form),
           });
-          if (signInError) throw signInError;
+          const body = (await response.json().catch(() => null)) as { error?: string } | null;
+          if (!response.ok) throw new Error(body?.error || "Something went wrong.");
           await refreshUser();
-          void navigate({ to: "/profile" });
+          void navigate({ to: "/home" });
         }
-      } else {
-        const response = await fetch(`/api/auth/${mode === "login" ? "login" : "register"}`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        if (!response.ok) throw new Error(body?.error || "Something went wrong.");
-        await refreshUser();
-        void navigate({ to: "/profile" });
       }
     } catch (cause) {
       setMessage(
@@ -189,7 +240,7 @@ function AuthPage() {
                     placeholder="Full name"
                     className="auth-input"
                   />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <input
                       required
                       type="number"
@@ -210,6 +261,14 @@ function AuthPage() {
                       <option>Female</option>
                       <option>Male</option>
                       <option>Prefer not to say</option>
+                    </select>
+                    <select
+                      value={form.role}
+                      onChange={(e) => update("role", e.target.value)}
+                      className="auth-input font-medium"
+                    >
+                      <option value="Kid">Kid</option>
+                      <option value="Family">Family</option>
                     </select>
                   </div>
                   <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-primary/40 p-3 text-sm font-bold text-primary">
@@ -236,10 +295,10 @@ function AuthPage() {
               )}
               <input
                 required
-                type="email"
+                type={mode === "login" ? "text" : "email"}
                 value={form.email}
                 onChange={(e) => update("email", e.target.value)}
-                placeholder="Email address"
+                placeholder={mode === "login" ? "Email address or username" : "Email address"}
                 className="auth-input"
               />
               {passwordInput("password", "Password")}

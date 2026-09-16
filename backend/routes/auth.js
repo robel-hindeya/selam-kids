@@ -26,7 +26,7 @@ function setAuthCookie(res, userId) {
   });
 }
 
-async function passwordHash(password) {
+export async function passwordHash(password) {
   const salt = crypto.randomBytes(16).toString("hex");
   const key = await scrypt(password, salt, 64);
   return `${salt}:${Buffer.from(key).toString("hex")}`;
@@ -41,7 +41,8 @@ async function passwordMatches(password, stored) {
 }
 
 router.post("/register", async (req, res) => {
-  const { displayName, email, password, gender, age, avatarUrl } = req.body || {};
+  const { displayName, email, password, gender, age, avatarUrl, role } = req.body || {};
+  const userRole = role === "Family" ? "Family" : "Kid";
   const cleanEmail = String(email || "")
     .trim()
     .toLowerCase();
@@ -67,8 +68,8 @@ router.post("/register", async (req, res) => {
     while ((await query("SELECT id FROM users WHERE username = $1", [username])).rows[0])
       username = `${base}${suffix++}`;
     const result = await query(
-      `INSERT INTO users (id, username, email, display_name, gender, age, avatar_url, password_hash)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
+      `INSERT INTO users (id, username, email, display_name, gender, age, avatar_url, password_hash, role, account_type)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'Email') RETURNING id`,
       [
         crypto.randomUUID(),
         username,
@@ -78,6 +79,7 @@ router.post("/register", async (req, res) => {
         numericAge,
         String(avatarUrl || ""),
         await passwordHash(password),
+        userRole,
       ],
     );
     setAuthCookie(res, result.rows[0].id);
@@ -88,20 +90,185 @@ router.post("/register", async (req, res) => {
   }
 });
 
+router.post("/session", async (req, res) => {
+  const { id: supaId, email, displayName, avatarUrl, username } = req.body || {};
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  if (!cleanEmail) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  try {
+    const superAdminEmails = (process.env.SUPERADMIN_EMAIL || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const shouldBeSuperAdmin = superAdminEmails.includes(cleanEmail);
+
+    let userResult = await query(
+      "SELECT id, username, email, display_name, gender, age, avatar_url, role, account_type, is_disabled, is_admin, is_super_admin, legacy_points FROM users WHERE id = $1 OR LOWER(email) = $2",
+      [supaId || "", cleanEmail],
+    );
+
+    let user = userResult.rows[0];
+    const isGoogle = Boolean(
+      avatarUrl?.includes("googleusercontent.com") ||
+      avatarUrl?.includes("lh3.google") ||
+      req.body?.accountType === "Google",
+    );
+
+    if (user) {
+      if (user.is_disabled) {
+        return res.status(403).json({ error: "This account has been disabled. Please contact an administrator." });
+      }
+
+      if (shouldBeSuperAdmin && (!user.is_super_admin || !user.is_admin)) {
+        await query(
+          "UPDATE users SET is_admin = TRUE, is_super_admin = TRUE, role = 'Super Admin' WHERE id = $1",
+          [user.id],
+        );
+        user.is_admin = true;
+        user.is_super_admin = true;
+        user.role = "Super Admin";
+      }
+
+      if (avatarUrl && (!user.avatar_url || isGoogle)) {
+        await query(
+          "UPDATE users SET avatar_url = $1, account_type = CASE WHEN $2 = 'Google' THEN 'Google' ELSE account_type END, updated_at = NOW() WHERE id = $3",
+          [avatarUrl, isGoogle ? "Google" : "Email", user.id],
+        );
+        user.avatar_url = avatarUrl;
+        if (isGoogle) user.account_type = "Google";
+      }
+    } else {
+      const base = (
+        username ||
+        displayName ||
+        cleanEmail.split("@")[0] ||
+        "reader"
+      )
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .slice(0, 24) || "reader";
+
+      let cleanUser = base;
+      let count = 1;
+      while ((await query("SELECT id FROM users WHERE username = $1", [cleanUser])).rows[0]) {
+        cleanUser = `${base}${count++}`;
+      }
+
+      const userId = supaId || crypto.randomUUID();
+      const role = shouldBeSuperAdmin ? "Super Admin" : "Kid";
+      const isAdmin = shouldBeSuperAdmin;
+      const isSuperAdmin = shouldBeSuperAdmin;
+      const accountType = isGoogle ? "Google" : "Email";
+
+      const insertResult = await query(
+        `INSERT INTO users (
+          id, google_id, username, email, display_name, avatar_url, role, account_type,
+          is_admin, is_super_admin, is_disabled, legacy_points, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, FALSE, 0, NOW(), NOW())
+        ON CONFLICT (id) DO UPDATE SET
+          email = EXCLUDED.email,
+          updated_at = NOW()
+        RETURNING id, username, email, display_name, gender, age, avatar_url, role, account_type, is_disabled, is_admin, is_super_admin, legacy_points`,
+        [
+          userId,
+          isGoogle ? userId : null,
+          cleanUser,
+          cleanEmail,
+          displayName || cleanUser,
+          avatarUrl || "",
+          role,
+          accountType,
+          isAdmin,
+          isSuperAdmin,
+        ],
+      );
+      user = insertResult.rows[0];
+    }
+
+    setAuthCookie(res, user.id);
+    return res.json({
+      ok: true,
+      user: {
+        _id: user.id,
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        displayName: user.display_name,
+        fullName: user.display_name,
+        gender: user.gender || "",
+        age: user.age,
+        avatarUrl: user.avatar_url || "",
+        legacyPoints: user.legacy_points || 0,
+        role: user.role || "Kid",
+        accountType: user.account_type || (isGoogle ? "Google" : "Email"),
+        isAdmin: Boolean(user.is_admin),
+        isSuperAdmin: Boolean(user.is_super_admin),
+        isDisabled: Boolean(user.is_disabled),
+      },
+    });
+  } catch (err) {
+    console.error("Session sync failed:", err);
+    return res.status(500).json({ error: "Failed to establish authenticated session." });
+  }
+});
+
 router.post("/login", async (req, res) => {
-  const email = String(req.body?.email || "")
+  const identifier = String(req.body?.email || req.body?.username || "")
     .trim()
     .toLowerCase();
   const password = String(req.body?.password || "");
+  if (!identifier || !password) {
+    return res.status(400).json({ error: "Please enter your username or email, and password." });
+  }
   try {
-    const result = await query("SELECT id, password_hash FROM users WHERE LOWER(email) = $1", [
-      email,
-    ]);
-    const user = result.rows[0];
+    const result = await query(
+      "SELECT id, username, email, display_name, password_hash, gender, age, avatar_url, legacy_points, account_type, is_admin, is_super_admin, is_disabled, role FROM users WHERE LOWER(email) = $1 OR LOWER(username) = $1",
+      [identifier],
+    );
+    let user = result.rows[0];
     if (!user || !(await passwordMatches(password, user.password_hash)))
-      return res.status(401).json({ error: "Incorrect email or password." });
+      return res.status(401).json({ error: "Incorrect username/email or password." });
+    if (user.is_disabled) {
+      return res.status(403).json({ error: "This account has been disabled. Please contact an administrator." });
+    }
+
+    const superAdminEmails = (process.env.SUPERADMIN_EMAIL || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    if (superAdminEmails.includes(user.email?.toLowerCase()) && (!user.is_super_admin || !user.is_admin)) {
+      await query(
+        "UPDATE users SET is_admin = TRUE, is_super_admin = TRUE, role = 'Super Admin' WHERE id = $1",
+        [user.id],
+      );
+      user.is_admin = true;
+      user.is_super_admin = true;
+      user.role = "Super Admin";
+    }
+
     setAuthCookie(res, user.id);
-    return res.json({ ok: true });
+    return res.json({
+      ok: true,
+      user: {
+        _id: user.id,
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        displayName: user.display_name,
+        fullName: user.display_name,
+        gender: user.gender || "",
+        age: user.age,
+        avatarUrl: user.avatar_url || "",
+        legacyPoints: user.legacy_points || 0,
+        role: user.role || "Kid",
+        accountType: user.account_type || "Email",
+        isAdmin: Boolean(user.is_admin),
+        isSuperAdmin: Boolean(user.is_super_admin),
+        isDisabled: Boolean(user.is_disabled),
+      },
+    });
   } catch (error) {
     console.error("Login failed", error);
     return res.status(500).json({ error: "Could not log you in." });

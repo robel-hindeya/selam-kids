@@ -156,26 +156,31 @@ function StoryPage() {
           </header>
 
           <article className="mt-4 overflow-hidden rounded-4xl bg-card shadow-[var(--shadow-card)]">
-            <div className={`relative ${story.tint} p-3`}>
-              <img
-                src={story.image}
-                alt={story.title}
-                width={1024}
-                height={640}
-                className="h-56 w-full rounded-3xl object-cover sm:h-72"
-              />
-              <div className="absolute bottom-6 left-6 flex flex-wrap gap-2 text-[11px] font-bold">
-                <span className="inline-flex items-center gap-1 rounded-full bg-card/90 px-3 py-1">
-                  <Clock className="size-3.5" /> {story.minutes} min read
-                </span>
-                <span className="rounded-full bg-card/90 px-3 py-1 text-muted-foreground">
-                  {story.date}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-card/90 px-3 py-1 text-accent">
-                  <Heart className="size-3.5 fill-current" /> {story.likes}
-                </span>
+            {page === 0 && (
+              <div className={`relative ${story.tint} p-3`}>
+                <div className="relative overflow-hidden rounded-3xl">
+                  <img
+                    src={story.image}
+                    alt={story.title}
+                    width={1584}
+                    height={396}
+                    className="aspect-[4/1] min-h-[140px] w-full object-cover sm:min-h-[170px]"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 flex flex-wrap gap-2 text-[11px] font-bold">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-card/90 px-3 py-1 shadow-sm backdrop-blur-xs">
+                      <Clock className="size-3.5" /> {story.minutes} min read
+                    </span>
+                    <span className="rounded-full bg-card/90 px-3 py-1 text-muted-foreground shadow-sm backdrop-blur-xs">
+                      {story.date}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-card/90 px-3 py-1 text-accent shadow-sm backdrop-blur-xs">
+                      <Heart className="size-3.5 fill-current" /> {story.likes}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="p-6">
               <span className="inline-block rounded-full bg-grape px-3 py-1 font-display text-xs font-extrabold text-primary-foreground">

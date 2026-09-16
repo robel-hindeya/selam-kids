@@ -17,8 +17,11 @@ function userDoc(row) {
     age: row.age,
     avatarUrl: row.avatar_url,
     legacyPoints: row.legacy_points,
-    isAdmin: row.is_admin,
-    isSuperAdmin: row.is_super_admin,
+    role: row.role || "Kid",
+    accountType: row.account_type || (row.google_id || row.avatar_url?.includes("googleusercontent") ? "Google" : "Email"),
+    isAdmin: Boolean(row.is_admin),
+    isSuperAdmin: Boolean(row.is_super_admin),
+    isDisabled: Boolean(row.is_disabled),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -120,7 +123,7 @@ function makeContentModel(type) {
         for (const doc of docs) {
           if (doc.userId) {
             const user = await query(
-              "SELECT id, display_name, email, username FROM users WHERE id = $1",
+              "SELECT id, display_name, email, username, role FROM users WHERE id = $1",
               [doc.userId],
             );
             if (user.rows[0])
@@ -129,6 +132,7 @@ function makeContentModel(type) {
                 displayName: user.rows[0].display_name,
                 email: user.rows[0].email,
                 username: user.rows[0].username,
+                role: user.rows[0].role || "Kid",
               };
           }
         }
@@ -273,6 +277,7 @@ const User = {
         gender: "gender",
         age: "age",
         avatarUrl: "avatar_url",
+        role: "role",
       };
       const entries = Object.entries(data).filter(([key]) => fields[key]);
       const values = entries.map(([key]) => data[key]);
@@ -288,7 +293,7 @@ const User = {
   }),
   create: async (data) => {
     const result = await query(
-      `INSERT INTO users (id, google_id, username, email, display_name, gender, age, avatar_url, legacy_points) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      `INSERT INTO users (id, google_id, username, email, display_name, gender, age, avatar_url, legacy_points, role) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
       [
         id(),
         data.googleId ?? null,
@@ -299,6 +304,7 @@ const User = {
         data.age ?? null,
         data.avatarUrl ?? "",
         data.legacyPoints ?? 0,
+        data.role || "Kid",
       ],
     );
     return userDoc(result.rows[0]);

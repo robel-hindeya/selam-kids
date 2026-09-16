@@ -126,7 +126,7 @@ async function uploadImage(file: File): Promise<string | null> {
 
 // ── Page ───────────────────────────────────────────────────────────────────
 function MessagesPage() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [sent, setSent] = useState<null | "message" | "feedback">(null);
   const [feedbackError, setFeedbackError] = useState("");
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
@@ -217,7 +217,7 @@ function MessagesPage() {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ type: "God", message: text, imageUrl }),
+                body: JSON.stringify({ type: "God", message: text, imageUrl, userId: user?._id }),
               });
 
               setSent("message");
@@ -329,7 +329,7 @@ function MessagesPage() {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ type: "Drawing", message: text, imageUrl }),
+                body: JSON.stringify({ type: "Drawing", message: text, imageUrl, userId: user?._id }),
               });
 
               setDrawingMessageSent(true);
@@ -442,7 +442,8 @@ function MessagesPage() {
                     type: "Family",
                     familyName: String(formData.get("familyName") ?? ""),
                     kidUsername: String(formData.get("kidUsername") ?? ""),
-                    message: String(formData.get("message") ?? "")
+                    message: String(formData.get("message") ?? ""),
+                    userId: user?._id,
                   }),
                 });
 

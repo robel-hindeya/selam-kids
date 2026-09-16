@@ -49,6 +49,7 @@ export async function connectPostgres() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'Kid';
     CREATE TABLE IF NOT EXISTS magazines (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -91,6 +92,19 @@ export async function connectPostgres() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'Email';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_disabled BOOLEAN NOT NULL DEFAULT FALSE;
+    CREATE TABLE IF NOT EXISTS activity_logs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      username TEXT NOT NULL DEFAULT '',
+      action TEXT NOT NULL,
+      details TEXT NOT NULL DEFAULT '',
+      target_type TEXT NOT NULL DEFAULT '',
+      target_id TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs (created_at DESC);
     CREATE TABLE IF NOT EXISTS magazine_sales (
       id TEXT PRIMARY KEY,
       magazine_id TEXT REFERENCES magazines(id) ON DELETE SET NULL,
@@ -103,10 +117,13 @@ export async function connectPostgres() {
   // This makes it possible to designate the first super administrator without
   // exposing a public privilege-escalation route. Set SUPERADMIN_EMAIL in env.
   if (process.env.SUPERADMIN_EMAIL) {
-    await query(
-      "UPDATE users SET is_admin = TRUE, is_super_admin = TRUE WHERE LOWER(email) = LOWER($1)",
-      [process.env.SUPERADMIN_EMAIL.trim()],
-    );
+    const emails = process.env.SUPERADMIN_EMAIL.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    for (const email of emails) {
+      await query(
+        "UPDATE users SET is_admin = TRUE, is_super_admin = TRUE, role = 'Super Admin' WHERE LOWER(email) = $1",
+        [email],
+      );
+    }
   }
 
   const [{ rows: bannerCount }, { rows: magazineCount }] = await Promise.all([
