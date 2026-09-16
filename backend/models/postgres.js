@@ -32,6 +32,7 @@ function contentDoc(row, type) {
       title: row.title,
       kicker: row.kicker,
       imageUrl: row.image_url,
+      magazineId: row.magazine_id || null,
       active: row.active,
       order: row.display_order,
       createdAt: row.created_at,
@@ -95,7 +96,7 @@ function makeContentModel(type) {
   const table = type === "banner" ? "banners" : type === "feedback" ? "feedback" : "magazines";
   const fields =
     type === "banner"
-      ? "id, title, kicker, image_url, active, display_order, created_at, updated_at"
+      ? "id, title, kicker, image_url, magazine_id, active, display_order, created_at, updated_at"
       : type === "feedback"
         ? "id, type, message, image_url, family_name, kid_username, user_id, created_at, updated_at"
         : "id, title, description, cover_url, minutes, likes, edition, category, date, paragraphs, fun_fact, target_url, story_images, active, created_at, updated_at";
@@ -154,6 +155,7 @@ function makeContentModel(type) {
               title: "title",
               kicker: "kicker",
               imageUrl: "image_url",
+              magazineId: "magazine_id",
               active: "active",
               order: "display_order",
             }
@@ -174,10 +176,15 @@ function makeContentModel(type) {
             };
       const entries = Object.entries(data).filter(([key]) => allowed[key]);
       if (!entries.length) return makeContentModel(type).findById(value);
-      const values = entries.map(([key, field]) =>
-        field === "paragraphs" || field === "story_images" ? json(data[key]) : data[key],
-      );
-      const assignments = entries.map(([, field], index) => `${field} = $${index + 1}`).join(", ");
+      const values = entries.map(([key]) => {
+        const column = allowed[key];
+        if (column === "paragraphs" || column === "story_images") return json(data[key]);
+        if (column === "magazine_id") return data[key] || null;
+        return data[key];
+      });
+      const assignments = entries
+        .map(([key], index) => `${allowed[key]} = $${index + 1}`)
+        .join(", ");
       const result = await query(
         `UPDATE ${table} SET ${assignments}, updated_at = NOW() WHERE id = $${values.length + 1} RETURNING ${fields}`,
         [...values, value],
@@ -188,12 +195,13 @@ function makeContentModel(type) {
       const now = new Date();
       if (type === "banner") {
         const result = await query(
-          `INSERT INTO banners (id, title, kicker, image_url, active, display_order, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING ${fields}`,
+          `INSERT INTO banners (id, title, kicker, image_url, magazine_id, active, display_order, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING ${fields}`,
           [
             id(),
             data.title,
             data.kicker ?? "",
             data.imageUrl ?? "",
+            data.magazineId || null,
             data.active !== false,
             Number(data.order ?? 0),
             now,

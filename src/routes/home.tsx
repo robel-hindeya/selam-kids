@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, ChevronLeft, ChevronRight, Search, Sparkles } from "lucide-react";
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
 import { StoryCard } from "@/components/kids/StoryCard";
@@ -96,10 +96,24 @@ function HeroSlider() {
         <h1 className="font-display text-4xl leading-tight font-extrabold text-primary-foreground sm:text-5xl">
           {slides[index]?.title}
         </h1>
-        <button className="inline-flex w-fit items-center gap-2 rounded-full bg-secondary px-6 py-3 font-display text-sm font-extrabold text-secondary-foreground shadow-[var(--shadow-soft)] transition-transform hover:scale-105">
-          <Sparkles className="size-4" />
-          Read the magazine
-        </button>
+        {slides[index]?.magazineId ? (
+          <Link
+            to="/story/$slug"
+            params={{ slug: `mag-${slides[index].magazineId}` }}
+            className="inline-flex w-fit items-center gap-2 rounded-full bg-secondary px-6 py-3 font-display text-sm font-extrabold text-secondary-foreground shadow-[var(--shadow-soft)] transition-transform hover:scale-105"
+          >
+            <Sparkles className="size-4" />
+            Read the Magazine
+          </Link>
+        ) : (
+          <button
+            type="button"
+            className="inline-flex w-fit items-center gap-2 rounded-full bg-secondary px-6 py-3 font-display text-sm font-extrabold text-secondary-foreground shadow-[var(--shadow-soft)] transition-transform hover:scale-105"
+          >
+            <Sparkles className="size-4" />
+            Read the Magazine
+          </button>
+        )}
       </div>
 
       <button

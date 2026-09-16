@@ -268,8 +268,10 @@ function MagazinesTab() {
 // ─── Banners Tab ───────────────────────────────────────────────────────────
 function BannersTab() {
     const [banners, setBanners] = useState<any[]>([]);
+    const [magazines, setMagazines] = useState<any[]>([]);
     const [title, setTitle] = useState("");
     const [kicker, setKicker] = useState("");
+    const [selectedMagazineId, setSelectedMagazineId] = useState("");
     const [fileName, setFileName] = useState("");
     const [editingId, setEditingId] = useState<string | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
@@ -279,8 +281,14 @@ function BannersTab() {
         if (res.ok) setBanners(await res.json());
     };
 
+    const fetchMagazines = async () => {
+        const res = await fetch("/api/admin/magazines", { credentials: "include" });
+        if (res.ok) setMagazines(await res.json());
+    };
+
     useEffect(() => {
         void fetchBanners();
+        void fetchMagazines();
     }, []);
 
     const handleUpload = async (e: React.FormEvent) => {
@@ -293,7 +301,13 @@ function BannersTab() {
                 method: editingId ? "PUT" : "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, kicker, ...(imageUrl ? { imageUrl } : {}), active: true }),
+                body: JSON.stringify({
+                    title,
+                    kicker,
+                    magazineId: selectedMagazineId || null,
+                    ...(imageUrl ? { imageUrl } : {}),
+                    active: true,
+                }),
             });
             if (!response.ok) {
                 const error = await response.json().catch(() => null) as { error?: string } | null;
@@ -301,6 +315,7 @@ function BannersTab() {
             }
             setTitle("");
             setKicker("");
+            setSelectedMagazineId("");
             setFileName("");
             setEditingId(null);
             if (fileRef.current) fileRef.current.value = "";
@@ -314,6 +329,7 @@ function BannersTab() {
         setEditingId(banner._id);
         setTitle(banner.title || "");
         setKicker(banner.kicker || "");
+        setSelectedMagazineId(banner.magazineId || "");
         setFileName("");
         if (fileRef.current) fileRef.current.value = "";
     };
@@ -322,6 +338,7 @@ function BannersTab() {
         setEditingId(null);
         setTitle("");
         setKicker("");
+        setSelectedMagazineId("");
         setFileName("");
         if (fileRef.current) fileRef.current.value = "";
     };
@@ -352,6 +369,21 @@ function BannersTab() {
                         onChange={(e) => setKicker(e.target.value)}
                         className="rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-500"
                     />
+                    <select
+                        value={selectedMagazineId}
+                        onChange={(e) => setSelectedMagazineId(e.target.value)}
+                        aria-label="Select Magazine"
+                        className="rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-2 text-sm text-neutral-200 outline-none focus:border-blue-500"
+                    >
+                        <option value="" className="bg-neutral-950 text-neutral-400">
+                            -- Select a Magazine (Optional) --
+                        </option>
+                        {magazines.map((mag) => (
+                            <option key={mag._id} value={mag._id} className="bg-neutral-950 text-white">
+                                {mag.title || "Untitled Magazine"}
+                            </option>
+                        ))}
+                    </select>
                     <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-700 bg-neutral-950 px-4 py-6 text-center transition-colors hover:border-blue-500 hover:bg-neutral-950/70">
                         <ImagePlus className="size-7 text-blue-400" />
                         <span className="text-sm font-bold text-white">{fileName || "Choose banner image"}</span>
@@ -374,23 +406,33 @@ function BannersTab() {
             <div className="lg:col-span-2">
                 <h2 className="text-xl font-bold text-white mb-4">Active Banners</h2>
                 <div className="flex flex-col gap-4">
-                    {banners.map((b) => (
-                        <div key={b._id} className="rounded-xl border border-neutral-800 bg-neutral-900 overflow-hidden flex items-center pr-4">
-                            <img src={b.imageUrl} alt={b.title} className="w-48 h-24 object-cover" />
-                            <div className="p-4 flex-1">
-                                <p className="text-xs font-bold text-blue-400">{b.kicker}</p>
-                                <h3 className="font-bold text-lg text-white">{b.title}</h3>
+                    {banners.map((b) => {
+                        const linkedMagazine = magazines.find((m) => m._id === b.magazineId);
+                        return (
+                            <div key={b._id} className="rounded-xl border border-neutral-800 bg-neutral-900 overflow-hidden flex items-center pr-4">
+                                <img src={b.imageUrl} alt={b.title} className="w-48 h-24 object-cover" />
+                                <div className="p-4 flex-1">
+                                    <p className="text-xs font-bold text-blue-400">{b.kicker}</p>
+                                    <h3 className="font-bold text-lg text-white">{b.title}</h3>
+                                    {linkedMagazine ? (
+                                        <p className="text-xs text-neutral-400 mt-1">
+                                            Magazine: <span className="text-neutral-200 font-semibold">{linkedMagazine.title}</span>
+                                        </p>
+                                    ) : (
+                                        <p className="text-xs text-neutral-500 mt-1 italic">No magazine selected</p>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                <button onClick={() => handleEdit(b)} aria-label={`Edit ${b.title}`} className="text-neutral-400 hover:text-white p-2">
+                                    <Pencil className="size-5" />
+                                </button>
+                                <button onClick={() => handleDelete(b._id)} aria-label={`Delete ${b.title}`} className="text-red-500 hover:text-red-400 p-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+                                </button>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                            <button onClick={() => handleEdit(b)} aria-label={`Edit ${b.title}`} className="text-neutral-400 hover:text-white p-2">
-                                <Pencil className="size-5" />
-                            </button>
-                            <button onClick={() => handleDelete(b._id)} aria-label={`Delete ${b.title}`} className="text-red-500 hover:text-red-400 p-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
-                            </button>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>

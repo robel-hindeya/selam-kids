@@ -45,6 +45,7 @@ export function addBanner(data) {
         title: data.title,
         kicker: data.kicker ?? "",
         imageUrl: data.imageUrl,
+        magazineId: data.magazineId || null,
         active: true,
         order: Number(data.order ?? 0),
         createdAt: new Date().toISOString(),

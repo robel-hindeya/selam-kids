@@ -72,11 +72,13 @@ export async function connectPostgres() {
       title TEXT NOT NULL,
       kicker TEXT NOT NULL DEFAULT '',
       image_url TEXT NOT NULL DEFAULT '',
+      magazine_id TEXT,
       active BOOLEAN NOT NULL DEFAULT TRUE,
       display_order INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE banners ADD COLUMN IF NOT EXISTS magazine_id TEXT;
     CREATE TABLE IF NOT EXISTS feedback (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL,
@@ -115,13 +117,14 @@ export async function connectPostgres() {
   if (bannerCount[0].count === 0) {
     for (const banner of readJson("banners.json")) {
       await query(
-        `INSERT INTO banners (id, title, kicker, image_url, active, display_order, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING`,
+        `INSERT INTO banners (id, title, kicker, image_url, magazine_id, active, display_order, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`,
         [
           banner._id,
           banner.title,
           banner.kicker ?? "",
           banner.imageUrl ?? "",
+          banner.magazineId ?? null,
           banner.active !== false,
           Number(banner.order ?? 0),
           banner.createdAt || new Date(),
