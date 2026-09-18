@@ -8,6 +8,35 @@ const { handleChapaWebhook } = createPaymentService();
 
 const webhookLimiter = createRateLimiter({ windowMs: 60_000, max: 120 });
 
+function frontendBaseUrl() {
+  const raw = String(process.env.FRONTEND_URL || process.env.APP_URL || "http://localhost:8080")
+    .trim()
+    .split(/\s+/)[0];
+  return raw.replace(/\/$/, "");
+}
+
+/**
+ * GET /api/webhooks/chapa
+ * Safety net: if Chapa (or an old dashboard setting) sends the browser to the
+ * webhook URL, redirect to the payment status page instead of Express 404.
+ */
+router.get("/chapa", (req, res) => {
+  const txRef =
+    req.query.trx_ref ||
+    req.query.tx_ref ||
+    req.query.txRef ||
+    req.query.merchant_reference ||
+    req.query.reference;
+
+  if (txRef) {
+    return res.redirect(
+      302,
+      `${frontendBaseUrl()}/payment/status/${encodeURIComponent(String(txRef))}`,
+    );
+  }
+  return res.redirect(302, `${frontendBaseUrl()}/home`);
+});
+
 // POST /api/webhooks/chapa
 // Receives Chapa webhook events (charge.success, charge.failed/cancelled, ...).
 // Signature is validated (chapa-signature / x-chapa-signature) before any

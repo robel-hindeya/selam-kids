@@ -40,31 +40,40 @@ Add to `.env` (see `.env.example`):
 
 | Variable | Purpose |
 | --- | --- |
-| `CHAPA_SECRET_KEY` | Server-only. `CHASECK_TEST-…` in test mode. Never exposed to the browser. |
+| `CHAPA_SECRET_KEY` | Server-only. v2 test: `CHAPA_TEST_PRIV_…` or v1 test: `CHASECK_TEST-…`. Never exposed to the browser. |
 | `CHAPA_PUBLIC_KEY` | Reserved for future client-side use; currently unused by the app. |
 | `CHAPA_WEBHOOK_SECRET` | Shared secret Chapa signs webhooks with (set it in the Chapa dashboard webhook form). |
 | `CHAPA_ENV` | `test` or `live`. Controls which Chapa mode's keys are active. |
 | `CHAPA_CURRENCY` | Optional override; defaults to `ETB`. |
-| `APP_URL` / `FRONTEND_URL` | Base URLs used to build the `return_url` (`…/payment/status/<txRef>`) and `callback_url` (`…/api/webhooks/chapa`). |
+| `APP_URL` / `FRONTEND_URL` | Single base URL (no spaces). Used to build `success_url` / `return_url` (`…/payment/status/<txRef>`). |
+
+## After payment redirect
+
+Chapa sends the browser to `success_url` / `return_url` → `/payment/status/<txRef>`.
+
+If you previously saw **404 Not Found** after paying, common causes were:
+
+1. `APP_URL` had two URLs concatenated with a space (invalid redirect).
+2. `callback_url` pointed at the POST-only webhook route (`/api/webhooks/chapa`), so a browser GET returned Express 404.
+
+The app now:
+
+- Sanitizes `APP_URL` to the first URL token.
+- Uses Chapa v2 `success_url` / `cancel_url` for browser redirects (and v1 `return_url`).
+- Serves `GET /api/payments/chapa/callback` (and a GET safety net on the webhook path) that redirects to the status page.
 
 ## Webhook configuration (Chapa dashboard)
 
 In the Chapa dashboard (Settings → Webhooks / API Keys):
 
 - **Key**: `CHAPA_SECRET_KEY` (test or live).
-- **Webhook URL**: `https://<your-app>/api/webhooks/chapa`
+- **Webhook URL**: `https://<your-public-api>/api/webhooks/chapa` (must be **https** for v2).
 - **Webhook secret**: any long random string, then set the same value as
   `CHAPA_WEBHOOK_SECRET`.
-- **Events**: at minimum `charge.success`. `charge.failed`, `charge.cancelled`
-  and `charge.refunded` are handled too.
-- Also set **Return URL** to `https://<your-app>/payment/status/<txRef>` — the
-  kid is sent here after paying (the page auto-verifies using query-less URL
-  with the txRef in the path).
+- **Events**: at minimum `payment.success` (v2) or `charge.success` (v1).
 
-Local dev tips:
-
-- `ngrok http 4000` (or a tunnel) to generate an HTTPS callback URL for Chapa.
-- Chapa test mode lets you simulate failed/successful payments.
+Local webhook tip: `ngrok http 4000` and paste the https URL into the Chapa dashboard.
+The browser return URL can stay on `http://localhost:8080` — only the webhook needs https.
 
 ## Data model
 

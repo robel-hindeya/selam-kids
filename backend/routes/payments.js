@@ -13,6 +13,44 @@ const { initializePayment, verifyAndFulfillPayment } = createPaymentService();
 
 const createLimiter = createRateLimiter({ windowMs: 60_000, max: 20 });
 
+function frontendBaseUrl() {
+  const raw = String(process.env.FRONTEND_URL || process.env.APP_URL || "http://localhost:8080")
+    .trim()
+    .split(/\s+/)[0];
+  return raw.replace(/\/$/, "");
+}
+
+/**
+ * GET /api/payments/chapa/callback
+ * Chapa (especially v1) may redirect the browser here with query params:
+ *   ?trx_ref=…&tx_ref=…&status=success&ref_id=…
+ * Always bounce the user to the SPA status page so they never see an API 404.
+ */
+router.get("/chapa/callback", async (req, res) => {
+  const txRef =
+    req.query.trx_ref ||
+    req.query.tx_ref ||
+    req.query.txRef ||
+    req.query.merchant_reference ||
+    req.query.reference;
+
+  const statusHint = String(req.query.status || "").toLowerCase();
+
+  if (txRef) {
+    // Best-effort verify — never block the redirect on verification errors.
+    try {
+      await verifyAndFulfillPayment({ txRef: String(txRef), source: "callback" });
+    } catch (error) {
+      console.warn("[Chapa] callback verify skipped:", error?.message || error);
+    }
+    const dest = `${frontendBaseUrl()}/payment/status/${encodeURIComponent(String(txRef))}`;
+    return res.redirect(302, dest);
+  }
+
+  console.warn("[Chapa] callback hit without tx_ref", { query: req.query, statusHint });
+  return res.redirect(302, `${frontendBaseUrl()}/home`);
+});
+
 // POST /api/payments/chapa/create
 // Body: { productId: "<magazine id>", phoneNumber?: "09xxxxxxxx" }
 // Creates (or reuses) an order + a pending payment, then asks Chapa for a

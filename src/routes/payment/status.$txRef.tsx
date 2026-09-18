@@ -34,7 +34,9 @@ const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 60;
 
 function PaymentStatusPage() {
-  const { txRef } = Route.useParams();
+  const params = Route.useParams();
+  // Chapa may return an encoded tx_ref; normalize so verify lookups succeed.
+  const txRef = decodeURIComponent(params.txRef || "");
   const { isLoggedIn, loading: authLoading } = useAuth();
   const [snapshot, setSnapshot] = useState<PaymentStatusResponse | null>(null);
   const [error, setError] = useState("");

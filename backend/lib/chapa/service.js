@@ -14,16 +14,40 @@ import {
   verifyWebhookSignature,
 } from "./validation.js";
 
-function appBaseUrl() {
-  return (process.env.APP_URL || process.env.FRONTEND_URL || "http://localhost:8080").replace(/\/$/, "");
+function frontendBaseUrl() {
+  const raw = String(process.env.FRONTEND_URL || process.env.APP_URL || "http://localhost:8080")
+    .trim()
+    .split(/\s+/)[0];
+  return raw.replace(/\/$/, "");
 }
 
 function webhookUrl() {
-  return `${appBaseUrl()}/api/webhooks/chapa`;
+  // Prefer an explicitly public API base when set (e.g. https://api.example.com).
+  // Falls back to APP_URL which must be https for Chapa v2 webhook delivery.
+  const apiBase = String(process.env.API_URL || process.env.APP_URL || frontendBaseUrl())
+    .trim()
+    .split(/\s+/)[0]
+    .replace(/\/$/, "");
+  return `${apiBase}/api/webhooks/chapa`;
 }
 
+/** Browser redirect after Chapa checkout (must resolve to the SPA status page). */
 function returnUrlFor(txRef) {
-  return `${appBaseUrl()}/payment/status/${encodeURIComponent(txRef)}`;
+  // Do not encodeURIComponent the path segment — tx refs are URL-safe and
+  // double-encoding has caused 404s after Chapa redirects back.
+  return `${frontendBaseUrl()}/payment/status/${txRef}`;
+}
+
+/**
+ * Optional server callback Chapa may hit with a GET (?trx_ref=&status=).
+ * Must NOT be the POST-only webhook route (that was returning 404 in the browser).
+ */
+function browserCallbackUrl() {
+  const apiBase = String(process.env.API_URL || process.env.APP_URL || frontendBaseUrl())
+    .trim()
+    .split(/\s+/)[0]
+    .replace(/\/$/, "");
+  return `${apiBase}/api/payments/chapa/callback`;
 }
 
 function customerName(user) {
@@ -120,13 +144,16 @@ export function createPaymentService(deps = {}) {
         lastName,
         phoneNumber: payment.customerPhone || undefined,
         returnUrl: returnUrlFor(txRef),
-        callbackUrl: webhookUrl(),
+        cancelUrl: returnUrlFor(txRef),
+        // Browser/GET callback — NOT the signed POST webhook endpoint.
+        callbackUrl: browserCallbackUrl(),
         customization: {
           title: "Selam Kids",
           description: order.productTitle ? `Payment for ${order.productTitle}` : "Selam Kids purchase",
         },
         meta: {
           payment_reason: order.productTitle ? `Selam Kids - ${order.productTitle}` : "Selam Kids purchase",
+          order_id: order.id,
         },
       });
     } catch (error) {
@@ -152,7 +179,10 @@ export function createPaymentService(deps = {}) {
       throw new PaymentError(502, `Payment could not be started: ${error?.message || "Please try again."}`, "chapa_initialize_failed");
     }
 
-    const updated = await payments.updatePayment(payment.id, { checkoutUrl: result.checkoutUrl });
+    const updated = await payments.updatePayment(payment.id, {
+      checkoutUrl: result.checkoutUrl,
+      chapaTransactionId: result.chapaTransactionId || null,
+    });
 
     logger.initialized({
       paymentId: updated.id,
@@ -161,6 +191,11 @@ export function createPaymentService(deps = {}) {
       amount: centsToAmount(updated.amountCents),
       currency: updated.currency,
     });
+
+    // Webhook URL is configured in the Chapa dashboard (must be https).
+    // Log it so operators know where to point the dashboard setting.
+    console.log(`[Chapa] Dashboard webhook URL (configure in Chapa): ${webhookUrl()}`);
+    console.log(`[Chapa] Browser return URL: ${returnUrlFor(updated.txRef)}`);
 
     return {
       paymentId: updated.id,
@@ -287,7 +322,9 @@ export function createPaymentService(deps = {}) {
       return { payment: paymentDocWithOrder(payment), status: PAYMENT_STATUS.SUCCESS };
     }
 
-    const verification = await client.verifyTransaction(txRef);
+    const verification = await client.verifyTransaction(txRef, {
+      chapaTransactionId: payment.chapaTransactionId || null,
+    });
 
     if (!verification.ok) {
       // Chapa 404 = transaction not found / not paid yet.
@@ -306,7 +343,10 @@ export function createPaymentService(deps = {}) {
     if (chapaStatus === CHAPA_STATUS.SUCCESS) {
       const amountOk = amountsMatch(payment.amountCents, data.amount);
       const currencyOk = currenciesMatch(payment.currency, data.currency);
-      const txRefOk = String(data.tx_ref || "").toLowerCase() === String(payment.txRef).toLowerCase();
+      // Accept our tx_ref, or an empty merchant_reference (v2 pending→success lag).
+      const returnedRef = String(data.tx_ref || data.merchant_reference || "").toLowerCase();
+      const txRefOk =
+        !returnedRef || returnedRef === String(payment.txRef).toLowerCase();
 
       if (!amountOk || !currencyOk || !txRefOk) {
         await payments.setPaymentStatus(payment.id, PAYMENT_STATUS.FAILED, {
@@ -366,9 +406,16 @@ export function createPaymentService(deps = {}) {
       throw new PaymentError(401, "Invalid webhook signature.", "invalid_signature");
     }
 
-    logger.webhookReceived({ event: body?.event, txRef: body?.tx_ref || body?.txRef });
+    const txRef =
+      body?.tx_ref ||
+      body?.txRef ||
+      body?.trx_ref ||
+      body?.merchant_reference ||
+      body?.data?.tx_ref ||
+      body?.data?.merchant_reference;
 
-    const txRef = body?.tx_ref || body?.txRef;
+    logger.webhookReceived({ event: body?.event, txRef });
+
     if (!txRef) {
       logger.webhookRejected({ reason: "missing_tx_ref" });
       return { ok: true, status: "ignored" };
@@ -383,7 +430,12 @@ export function createPaymentService(deps = {}) {
     // Neutralize Chapa's legacy space-delimited event name if present.
     const event = String(body?.event || "").replace(/[\s/]+/g, "/").toLowerCase();
     await payments.updatePayment(payment.id, {
-      chapaTransactionId: body?.reference || payment.chapaTransactionId || null,
+      chapaTransactionId:
+        body?.chapa_reference ||
+        body?.reference ||
+        body?.ref_id ||
+        payment.chapaTransactionId ||
+        null,
       paymentMethod: body?.payment_method || payment.paymentMethod || null,
       webhookReceivedAt: new Date(),
     });

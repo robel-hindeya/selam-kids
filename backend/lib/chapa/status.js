@@ -19,12 +19,19 @@ export const ORDER_STATUS = Object.freeze({
 });
 
 export const CHAPA_EVENT = Object.freeze({
+  // v1 events
   CHARGE_SUCCESS: "charge.success",
   CHARGE_REFUNDED: "charge.refunded",
   CHARGE_REVERSED: "charge.reversed",
   CHARGE_FAILED_CANCELLED: "charge.failed/cancelled",
   PAYOUT_SUCCESS: "payout.success",
   PAYOUT_FAILED_CANCELLED: "payout.failed/cancelled",
+  // v2 events (api.chapa.global)
+  PAYMENT_SUCCESS: "payment.success",
+  PAYMENT_FAILED: "payment.failed",
+  PAYMENT_CANCELLED: "payment.cancelled",
+  PAYMENT_FULLY_REFUNDED: "payment.fully_refunded",
+  PAYMENT_PARTIALLY_REFUNDED: "payment.partially_refunded",
 });
 
 export const CHAPA_STATUS = Object.freeze({
@@ -40,12 +47,17 @@ export const CHAPA_STATUS = Object.freeze({
 export function statusFromChapaEvent(event) {
   switch (event) {
     case CHAPA_EVENT.CHARGE_SUCCESS:
+    case CHAPA_EVENT.PAYMENT_SUCCESS:
       return PAYMENT_STATUS.SUCCESS;
     case CHAPA_EVENT.CHARGE_REFUNDED:
     case CHAPA_EVENT.PAYOUT_SUCCESS:
+    case CHAPA_EVENT.PAYMENT_FULLY_REFUNDED:
+    case CHAPA_EVENT.PAYMENT_PARTIALLY_REFUNDED:
       return PAYMENT_STATUS.REFUNDED;
     case CHAPA_EVENT.CHARGE_FAILED_CANCELLED:
     case CHAPA_EVENT.PAYOUT_FAILED_CANCELLED:
+    case CHAPA_EVENT.PAYMENT_FAILED:
+    case CHAPA_EVENT.PAYMENT_CANCELLED:
       return PAYMENT_STATUS.FAILED;
     default:
       return null;

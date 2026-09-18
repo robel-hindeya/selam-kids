@@ -44,6 +44,12 @@ describe("Chapa status enums", () => {
 });
 
 describe("statusFromChapaEvent", () => {
+  it("maps payment.success (v2) to SUCCESS", () => {
+    expect(statusFromChapaEvent("payment.success")).toBe(PAYMENT_STATUS.SUCCESS);
+  });
+  it("maps payment.failed (v2) to FAILED", () => {
+    expect(statusFromChapaEvent("payment.failed")).toBe(PAYMENT_STATUS.FAILED);
+  });
   it("maps charge.success to SUCCESS", () => {
     expect(statusFromChapaEvent("charge.success")).toBe(PAYMENT_STATUS.SUCCESS);
   });
