@@ -143,7 +143,7 @@ async function downloadImage(url: string, fallbackName = "feedback-image") {
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = blobUrl;
-        const cleanName = url.split("?")[0].split("#")[0].split("/").pop();
+        const cleanName = url.split("?")[0]?.split("#")[0]?.split("/").pop();
         let filename = cleanName || fallbackName;
         if (!filename.includes(".")) {
             const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") || "png";
@@ -158,7 +158,7 @@ async function downloadImage(url: string, fallbackName = "feedback-image") {
         const a = document.createElement("a");
         a.href = url;
         a.target = "_blank";
-        a.download = url.split("?")[0].split("#")[0].split("/").pop() || fallbackName;
+        a.download = url.split("?")[0]?.split("#")[0]?.split("/").pop() || fallbackName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

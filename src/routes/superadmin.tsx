@@ -274,7 +274,7 @@ function SuperAdminPage() {
         role: editAdminForm.role,
       };
       if (editAdminForm.password.trim()) {
-        payload.password = editAdminForm.password.trim();
+        payload["password"] = editAdminForm.password.trim();
       }
       const response = await fetch(`/api/admin/superadmin/admins/${editingAdmin._id}`, {
         method: "PATCH",

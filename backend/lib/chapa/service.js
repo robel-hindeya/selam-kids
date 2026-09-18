@@ -144,12 +144,12 @@ export function createPaymentService(deps = {}) {
       });
       if (error instanceof chapaClient.ChapaApiError) {
         throw new PaymentError(
-          error.status === 401 ? 503 : 502,
-          "Payment could not be started. Please try again.",
+          error.status || 502,
+          `Payment could not be started: ${error.message || "Please try again."}`,
           error.code || "chapa_initialize_failed",
         );
       }
-      throw new PaymentError(502, "Payment could not be started. Please try again.", "chapa_initialize_failed");
+      throw new PaymentError(502, `Payment could not be started: ${error?.message || "Please try again."}`, "chapa_initialize_failed");
     }
 
     const updated = await payments.updatePayment(payment.id, { checkoutUrl: result.checkoutUrl });
@@ -334,6 +334,7 @@ export function createPaymentService(deps = {}) {
         verifiedAt: new Date(),
       });
       await fulfillSuccessfulPayment(savedCode);
+      console.log(`[Chapa] Payment successful for tx_ref: ${txRef}`);
       logger.verificationSuccess({ paymentId: savedCode.id, orderId: savedCode.orderId, txRef });
       return { payment: paymentDocWithOrder(await payments.findPaymentByTxRef(txRef)), status: PAYMENT_STATUS.SUCCESS };
     }
