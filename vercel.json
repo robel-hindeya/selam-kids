@@ -1,13 +1,14 @@
 {
+  "// # NOTE:": "Vercel Cloud Serverless Deployment Configuration | Layer: Infrastructure Gateway",
   "version": 2,
   "buildCommand": "npm run build",
   "functions": {
-    "api/**/*.js": {
+    "backend/api/handler.js": {
       "maxDuration": 30
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/api/(.*)", "destination": "/backend/api/handler.js" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

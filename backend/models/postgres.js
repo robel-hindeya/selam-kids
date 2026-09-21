@@ -1,3 +1,10 @@
+/**
+ * # NOTE: postgres.js
+ * Role: User Management Data Model
+ * Layer: Domain / Data Access
+ * Description: PostgreSQL queries for user authentication, password hashes, and admin roles.
+ */
+
 import crypto from "node:crypto";
 import { query } from "../lib/postgres.js";
 

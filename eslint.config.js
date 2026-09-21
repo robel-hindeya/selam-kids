@@ -1,3 +1,10 @@
+/**
+ * # NOTE: eslint.config.js
+ * Role: Code Quality & Static Analysis Configuration
+ * Layer: Tooling / Infrastructure
+ * Description: ESLint flat configuration for TypeScript, React hooks, and Prettier integration.
+ */
+
 import js from "@eslint/js";
 import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
 import globals from "globals";

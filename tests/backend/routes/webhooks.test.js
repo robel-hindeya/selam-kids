@@ -1,3 +1,10 @@
+/**
+ * # NOTE: webhooks.test.js
+ * Role: Webhook Route Integration Tests
+ * Layer: Testing / API
+ * Description: Tests /api/webhooks/chapa signature validation and retry status codes.
+ */
+
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import crypto from "node:crypto";
 import express from "express";

@@ -1,3 +1,10 @@
+/**
+ * # NOTE: progress.tsx
+ * Role: Progress UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible progress primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 "use client";
 
 import * as React from "react";

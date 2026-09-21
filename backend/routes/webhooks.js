@@ -1,3 +1,10 @@
+/**
+ * # NOTE: webhooks.js
+ * Role: Payment Webhooks Controller
+ * Layer: Presentation / REST API
+ * Description: Receives asynchronous payment notifications from Chapa and triggers fulfillment.
+ */
+
 import { Router } from "express";
 import { createPaymentService, PaymentError } from "../lib/chapa/service.js";
 import { createRateLimiter } from "../lib/chapa/rate-limit.js";

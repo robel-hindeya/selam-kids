@@ -1,3 +1,10 @@
+/**
+ * # NOTE: StoryCard.tsx
+ * Role: Magazine Story Card Component
+ * Layer: Presentation / Component
+ * Description: Visual preview card showing issue cover, reading duration, likes, and badges.
+ */
+
 import { Link } from "@tanstack/react-router";
 import { Clock, Heart } from "lucide-react";
 

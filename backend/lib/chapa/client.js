@@ -1,3 +1,10 @@
+/**
+ * # NOTE: client.js
+ * Role: Chapa Payment Gateway Client
+ * Layer: Infrastructure / Payments
+ * Description: HTTP client for Chapa API v2, payload signing, and HMAC-SHA256 signature verification.
+ */
+
 // Thin, dependency-free client for the official Chapa API.
 // Supports:
 //   - v2 (api.chapa.global) — keys like CHAPA_TEST_PRIV_… / CHAPA_LIVE_PRIV_…

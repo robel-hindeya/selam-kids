@@ -1,3 +1,10 @@
+/**
+ * # NOTE: menubar.tsx
+ * Role: Menubar UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible menubar primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as MenubarPrimitive from "@radix-ui/react-menubar";
 import { Check, ChevronRight, Circle } from "lucide-react";

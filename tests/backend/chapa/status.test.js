@@ -1,3 +1,10 @@
+/**
+ * # NOTE: status.test.js
+ * Role: Payment Status Transition Tests
+ * Layer: Testing / Payments
+ * Description: Tests validity of payment status state transitions and terminal states.
+ */
+
 import { describe, it, expect } from "vitest";
 import {
   statusFromChapaEvent,

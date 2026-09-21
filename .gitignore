@@ -1,3 +1,8 @@
+# # NOTE: .gitignore
+# Role: Git Version Control Exclusion Rules
+# Layer: Tooling / Infrastructure
+# Description: Specifies build artifacts, dependencies, environment files, and logs to ignore in git.
+
 # Logs
 logs
 *.log

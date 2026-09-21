@@ -1,3 +1,10 @@
+/**
+ * # NOTE: __root.tsx
+ * Role: Root Application Layout Route
+ * Layer: Presentation / Layout
+ * Description: Root component providing React Query client, meta tags, and global container.
+ */
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,

@@ -1,3 +1,10 @@
+/**
+ * # NOTE: toggle.tsx
+ * Role: Toggle UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible toggle primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as TogglePrimitive from "@radix-ui/react-toggle";
 import { cva, type VariantProps } from "class-variance-authority";

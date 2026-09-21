@@ -1,3 +1,10 @@
+/**
+ * # NOTE: sidebar.tsx
+ * Role: Sidebar UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible sidebar primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";

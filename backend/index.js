@@ -1,3 +1,10 @@
+/**
+ * # NOTE: index.js
+ * Role: Server Entrypoint & Listener
+ * Layer: Infrastructure / Application Bootstrap
+ * Description: Initializes HTTP server, connects to PostgreSQL database, and starts listening on PORT.
+ */
+
 import "dotenv/config";
 import app from "./app.js";
 import { connectPostgres } from "./lib/postgres.js";

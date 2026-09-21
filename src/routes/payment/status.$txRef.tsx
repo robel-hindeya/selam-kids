@@ -1,3 +1,10 @@
+/**
+ * # NOTE: status.$txRef.tsx
+ * Role: Payment Status & Verification Route
+ * Layer: Presentation / Page
+ * Description: Post-checkout verification view displaying real-time payment result and receipt.
+ */
+
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {

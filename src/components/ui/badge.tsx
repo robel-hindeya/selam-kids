@@ -1,3 +1,10 @@
+/**
+ * # NOTE: badge.tsx
+ * Role: Badge UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible badge primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 

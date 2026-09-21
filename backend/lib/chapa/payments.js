@@ -1,3 +1,10 @@
+/**
+ * # NOTE: payments.js
+ * Role: Payment Data Access Layer
+ * Layer: Domain / Persistence
+ * Description: Manages payment transactions, idempotency lookups, and status updates in PostgreSQL.
+ */
+
 import crypto from "node:crypto";
 import { query } from "../postgres.js";
 import { PAYMENT_STATUS } from "./status.js";

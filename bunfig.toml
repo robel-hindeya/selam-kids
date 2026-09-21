@@ -1,3 +1,8 @@
+# # NOTE: bunfig.toml
+# Role: Bun Package & Runtime Configuration
+# Layer: Tooling / Infrastructure
+# Description: Configuration file for Bun package manager and runtime execution.
+
 [install]
 saveTextLockfile = true
 # 24h supply-chain guard: skip package versions published less than a day ago.

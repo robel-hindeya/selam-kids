@@ -1,3 +1,10 @@
+/**
+ * # NOTE: activity.js
+ * Role: Audit Log & Activity Recorder
+ * Layer: Domain Service / Observability
+ * Description: Records administrative and system actions to PostgreSQL activity log table.
+ */
+
 import crypto from "node:crypto";
 import { query } from "./postgres.js";
 

@@ -1,3 +1,10 @@
+/**
+ * # NOTE: server.ts
+ * Role: SSR Entrypoint & Catastrophic Error Wrapper
+ * Layer: Presentation / SSR
+ * Description: Wraps TanStack Start SSR execution with error boundaries and recovery pages.
+ */
+
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";

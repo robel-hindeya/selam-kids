@@ -1,3 +1,10 @@
+/**
+ * # NOTE: dialog.tsx
+ * Role: Dialog UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible dialog primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 "use client";
 
 import * as React from "react";

@@ -1,3 +1,9 @@
+<!-- # NOTE: chapa.md
+     Role: Payment Integration Guide & Runbook
+     Layer: Documentation / Payments
+     Description: Operational guide, API contracts, webhook setup, and troubleshooting for Chapa.
+-->
+
 # Chapa Payment Integration (Selam Kids)
 
 Digital magazine purchases are paid for in **Ethiopian Birr (ETB)** through

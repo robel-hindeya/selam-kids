@@ -1,3 +1,10 @@
+/**
+ * # NOTE: LoginModal.tsx
+ * Role: Authentication Dialog Component
+ * Layer: Presentation / Component
+ * Description: Lightweight modal dialog allowing inline login without navigating away.
+ */
+
 import { useAuth } from "@/hooks/useAuth";
 
 const logoUrl = "/selamkids-logo.png";

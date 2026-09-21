@@ -1,3 +1,10 @@
+/**
+ * # NOTE: drawer.tsx
+ * Role: Drawer UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible drawer primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 

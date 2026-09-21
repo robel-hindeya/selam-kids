@@ -1,3 +1,10 @@
+/**
+ * # NOTE: validation.js
+ * Role: Payment Payload Validator
+ * Layer: Domain / Security
+ * Description: Validates payment initialization inputs, currency codes, and transaction references.
+ */
+
 import crypto from "node:crypto";
 
 // ─── Transaction reference ──────────────────────────────────────────────────

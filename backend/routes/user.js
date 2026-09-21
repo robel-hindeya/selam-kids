@@ -1,3 +1,10 @@
+/**
+ * # NOTE: user.js
+ * Role: User Profile Controller
+ * Layer: Presentation / REST API
+ * Description: Handles user profile retrieval and personal detail updates.
+ */
+
 import { Router } from "express";
 import multer from "multer";
 import path from "path";

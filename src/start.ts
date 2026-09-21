@@ -1,3 +1,10 @@
+/**
+ * # NOTE: start.ts
+ * Role: Client Hydration Entrypoint
+ * Layer: Presentation / Client Bootstrap
+ * Description: Hydrates TanStack Start application in the browser client.
+ */
+
 import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";

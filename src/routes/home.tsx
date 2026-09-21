@@ -1,6 +1,13 @@
+/**
+ * # NOTE: home.tsx
+ * Role: Kid Reader Dashboard Route
+ * Layer: Presentation / Page
+ * Description: Homepage showing featured banner carousel, trending stories, and magazine feeds.
+ */
+
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, ChevronLeft, ChevronRight, Search, Sparkles } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
 import { StoryCard } from "@/components/kids/StoryCard";
 import heroReading from "@/assets/hero-reading.jpg";
@@ -102,7 +109,6 @@ function HeroSlider() {
             params={{ slug: `mag-${slides[index].magazineId}` }}
             className="inline-flex w-fit items-center gap-2 rounded-full bg-secondary px-6 py-3 font-display text-sm font-extrabold text-secondary-foreground shadow-[var(--shadow-soft)] transition-transform hover:scale-105"
           >
-            <Sparkles className="size-4" />
             Read the Magazine
           </Link>
         ) : (
@@ -110,7 +116,6 @@ function HeroSlider() {
             type="button"
             className="inline-flex w-fit items-center gap-2 rounded-full bg-secondary px-6 py-3 font-display text-sm font-extrabold text-secondary-foreground shadow-[var(--shadow-soft)] transition-transform hover:scale-105"
           >
-            <Sparkles className="size-4" />
             Read the Magazine
           </button>
         )}

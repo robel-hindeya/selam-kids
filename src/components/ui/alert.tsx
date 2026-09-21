@@ -1,3 +1,10 @@
+/**
+ * # NOTE: alert.tsx
+ * Role: Alert UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible alert primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 

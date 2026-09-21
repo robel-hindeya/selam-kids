@@ -1,3 +1,10 @@
+/**
+ * # NOTE: admin.js
+ * Role: Admin Controller
+ * Layer: Presentation / REST API
+ * Description: Handles content management, user role adjustments, and platform analytics.
+ */
+
 import { Router } from "express";
 import multer from "multer";
 import path from "node:path";

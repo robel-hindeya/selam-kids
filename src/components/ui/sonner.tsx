@@ -1,3 +1,10 @@
+/**
+ * # NOTE: sonner.tsx
+ * Role: Sonner UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible sonner primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import { Toaster as Sonner } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;

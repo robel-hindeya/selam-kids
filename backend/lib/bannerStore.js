@@ -1,3 +1,10 @@
+/**
+ * # NOTE: bannerStore.js
+ * Role: Banner Storage & Management Helper
+ * Layer: Domain Service / Content
+ * Description: Provides CRUD methods for homepage promotional banners backed by JSON and database stores.
+ */
+
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";

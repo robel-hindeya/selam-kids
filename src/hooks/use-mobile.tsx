@@ -1,3 +1,10 @@
+/**
+ * # NOTE: use-mobile.tsx
+ * Role: Mobile Viewport Detection Hook
+ * Layer: Application / UI State
+ * Description: Listens for media query changes to detect mobile screen viewports.
+ */
+
 import * as React from "react";
 
 const MOBILE_BREAKPOINT = 768;

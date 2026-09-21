@@ -1,3 +1,8 @@
+# # NOTE: robots.txt
+# Role: Web Crawler & Search Engine Policy
+# Layer: Presentation / Infrastructure
+# Description: Directives defining allowed and restricted paths for search crawlers.
+
 User-agent: Googlebot
 Allow: /
 

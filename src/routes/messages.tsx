@@ -1,3 +1,10 @@
+/**
+ * # NOTE: messages.tsx
+ * Role: Feedback & Messages Route
+ * Layer: Presentation / Page
+ * Description: User messaging center and platform feedback submission view.
+ */
+
 import { type ChangeEvent, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";

@@ -1,3 +1,8 @@
+-- # NOTE: supabase_setup.sql
+-- Role: Database Schema Migrations & Security Policies
+-- Layer: Persistence / Database
+-- Description: Supabase PostgreSQL tables, RLS policies, indexes, and triggers.
+
 -- ==============================================================================
 -- SELAM KIDS - SUPABASE DATABASE SETUP & MIGRATION
 -- Run this in your Supabase Dashboard: SQL Editor -> New query -> Run

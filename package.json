@@ -1,4 +1,5 @@
 {
+  "// # NOTE:": "Root Configuration & Dependency Manifest | International Enterprise Architecture",
   "name": "tanstack_start_ts",
   "private": true,
   "sideEffects": false,

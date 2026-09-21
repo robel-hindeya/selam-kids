@@ -1,3 +1,10 @@
+/**
+ * # NOTE: switch.tsx
+ * Role: Switch UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible switch primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as SwitchPrimitives from "@radix-ui/react-switch";
 

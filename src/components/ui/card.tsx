@@ -1,3 +1,10 @@
+/**
+ * # NOTE: card.tsx
+ * Role: Card UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible card primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 
 import { cn } from "@/lib/utils";

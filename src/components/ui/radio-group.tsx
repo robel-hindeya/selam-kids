@@ -1,3 +1,10 @@
+/**
+ * # NOTE: radio-group.tsx
+ * Role: Radio-group UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible radio-group primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { Circle } from "lucide-react";

@@ -1,3 +1,10 @@
+/**
+ * # NOTE: handler.js
+ * Role: Serverless Application Adapter
+ * Layer: Infrastructure / Cloud Gateway Adapter
+ * Description: Wraps Express application with resilient PostgreSQL connection pool for serverless execution.
+ */
+
 import app from "../app.js";
 import { connectPostgres } from "../lib/postgres.js";
 

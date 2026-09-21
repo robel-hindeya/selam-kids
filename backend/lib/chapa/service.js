@@ -1,3 +1,10 @@
+/**
+ * # NOTE: service.js
+ * Role: Payment Orchestration Service
+ * Layer: Domain Service / Payments
+ * Description: Coordinates checkout creation, status reconciliation, order fulfillment, and webhooks.
+ */
+
 import crypto from "node:crypto";
 import { pool } from "../postgres.js";
 import * as chapaClient from "./client.js";

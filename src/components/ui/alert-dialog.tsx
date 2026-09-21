@@ -1,3 +1,10 @@
+/**
+ * # NOTE: alert-dialog.tsx
+ * Role: Alert-dialog UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible alert-dialog primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 

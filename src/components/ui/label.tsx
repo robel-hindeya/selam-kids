@@ -1,3 +1,10 @@
+/**
+ * # NOTE: label.tsx
+ * Role: Label UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible label primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 "use client";
 
 import * as React from "react";

@@ -1,3 +1,10 @@
+/**
+ * # NOTE: google.js
+ * Role: Google OAuth 2.0 Passport Strategy
+ * Layer: Domain / Authentication
+ * Description: Passport authentication strategy for Google Single Sign-On and user account onboarding.
+ */
+
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from "../models/User.js";

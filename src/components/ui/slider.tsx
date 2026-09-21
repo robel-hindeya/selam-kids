@@ -1,3 +1,10 @@
+/**
+ * # NOTE: slider.tsx
+ * Role: Slider UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible slider primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 

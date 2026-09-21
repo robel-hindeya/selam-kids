@@ -1,3 +1,10 @@
+/**
+ * # NOTE: input-otp.tsx
+ * Role: Input-otp UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible input-otp primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import { OTPInput, OTPInputContext } from "input-otp";
 import { Minus } from "lucide-react";

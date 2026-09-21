@@ -1,3 +1,9 @@
+<!-- # NOTE: AGENTS.md
+     Role: Autonomous Agent Guidelines & Lovable Rules
+     Layer: Governance
+     Description: Critical constraints and branch synchronization policies for AI assistant interactions.
+-->
+
 <!-- LOVABLE:BEGIN -->
 
 > [!IMPORTANT]

@@ -1,3 +1,10 @@
+/**
+ * # NOTE: postgres.js
+ * Role: PostgreSQL Connection Pool & Schema Runner
+ * Layer: Infrastructure / Persistence
+ * Description: Configures pg.Pool, table creation, migrations, and seed data initialization.
+ */
+
 import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";

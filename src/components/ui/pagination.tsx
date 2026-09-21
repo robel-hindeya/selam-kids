@@ -1,3 +1,10 @@
+/**
+ * # NOTE: pagination.tsx
+ * Role: Pagination UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible pagination primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 

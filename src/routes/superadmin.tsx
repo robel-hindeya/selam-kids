@@ -1,3 +1,10 @@
+/**
+ * # NOTE: superadmin.tsx
+ * Role: Super Administrator Control Center Route
+ * Layer: Presentation / Page
+ * Description: Platform governance route for managing administrator privileges and system activity.
+ */
+
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {

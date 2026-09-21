@@ -1,3 +1,10 @@
+/**
+ * # NOTE: chart.tsx
+ * Role: Chart UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible chart primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 

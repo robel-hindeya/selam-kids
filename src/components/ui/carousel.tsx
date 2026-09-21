@@ -1,3 +1,10 @@
+/**
+ * # NOTE: carousel.tsx
+ * Role: Carousel UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible carousel primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
 import { ArrowLeft, ArrowRight } from "lucide-react";

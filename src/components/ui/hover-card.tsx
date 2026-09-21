@@ -1,3 +1,10 @@
+/**
+ * # NOTE: hover-card.tsx
+ * Role: Hover-card UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible hover-card primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 

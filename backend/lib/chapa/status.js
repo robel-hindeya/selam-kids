@@ -1,3 +1,10 @@
+/**
+ * # NOTE: status.js
+ * Role: Payment Status State Machine
+ * Layer: Domain / Payments
+ * Description: Defines normalized payment statuses and valid status transition rules.
+ */
+
 // Centralized payment / order status definitions used across the Chapa
 // integration. Never use arbitrary status strings in the rest of the code.
 export const PAYMENT_STATUS = Object.freeze({

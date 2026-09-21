@@ -1,3 +1,10 @@
+/**
+ * # NOTE: orders.js
+ * Role: Order Data Access Layer
+ * Layer: Domain / Persistence
+ * Description: Handles order creation, status transitions, and PostgreSQL order record queries.
+ */
+
 import crypto from "node:crypto";
 import { query } from "../postgres.js";
 

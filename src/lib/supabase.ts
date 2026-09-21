@@ -1,3 +1,10 @@
+/**
+ * # NOTE: supabase.ts
+ * Role: Supabase Browser Client Singleton
+ * Layer: Infrastructure / Data Access
+ * Description: Initializes Supabase JavaScript client with environment credentials.
+ */
+
 import { createClient } from "@supabase/supabase-js";
 
 // Read environment variables supplied by Vite

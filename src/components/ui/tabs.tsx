@@ -1,3 +1,10 @@
+/**
+ * # NOTE: tabs.tsx
+ * Role: Tabs UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible tabs primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 

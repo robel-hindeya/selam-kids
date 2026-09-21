@@ -1,3 +1,10 @@
+/**
+ * # NOTE: resizable.tsx
+ * Role: Resizable UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible resizable primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import { GripVertical } from "lucide-react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 

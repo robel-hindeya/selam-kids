@@ -1,3 +1,10 @@
+/**
+ * # NOTE: dropdown-menu.tsx
+ * Role: Dropdown-menu UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible dropdown-menu primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 "use client";
 
 import * as React from "react";

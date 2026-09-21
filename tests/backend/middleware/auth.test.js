@@ -1,3 +1,10 @@
+/**
+ * # NOTE: auth.test.js
+ * Role: Auth Middleware Unit Tests
+ * Layer: Testing / Security
+ * Description: Tests JWT extraction from cookies and headers, token verification, and 401 handling.
+ */
+
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import jwt from "jsonwebtoken";
 

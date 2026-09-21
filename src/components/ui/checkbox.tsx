@@ -1,3 +1,10 @@
+/**
+ * # NOTE: checkbox.tsx
+ * Role: Checkbox UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible checkbox primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import { Check } from "lucide-react";

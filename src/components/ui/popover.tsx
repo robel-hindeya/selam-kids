@@ -1,3 +1,10 @@
+/**
+ * # NOTE: popover.tsx
+ * Role: Popover UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible popover primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 

@@ -1,3 +1,10 @@
+/**
+ * # NOTE: calendar.tsx
+ * Role: Calendar UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible calendar primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 "use client";
 
 import * as React from "react";

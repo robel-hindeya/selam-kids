@@ -1,3 +1,10 @@
+/**
+ * # NOTE: vite.config.ts
+ * Role: Build & Development Server Configuration
+ * Layer: Tooling / Infrastructure
+ * Description: Configures Vite bundler, proxy routes to Express backend, and TanStack Start plugins.
+ */
+
 // @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
 // or the app will break with duplicate plugins:
 //   - TanStack devtools (dev-only, first), tanstackStart, viteReact, tailwindcss, tsConfigPaths,

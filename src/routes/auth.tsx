@@ -1,3 +1,10 @@
+/**
+ * # NOTE: auth.tsx
+ * Role: Authentication Portal Route
+ * Layer: Presentation / Page
+ * Description: User sign in, sign up, password recovery, and Google SSO launcher.
+ */
+
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";

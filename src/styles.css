@@ -1,3 +1,10 @@
+/**
+ * # NOTE: styles.css
+ * Role: Global Stylesheet & Design Tokens
+ * Layer: Presentation / Styling
+ * Description: Tailwind CSS v4 setup, theme color definitions, animations, and typography tokens.
+ */
+
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";

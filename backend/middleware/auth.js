@@ -1,3 +1,10 @@
+/**
+ * # NOTE: auth.js
+ * Role: Authentication Middleware
+ * Layer: Application / Security Middleware
+ * Description: Verifies JWT tokens from cookies or Authorization headers and attaches user payload.
+ */
+
 import jwt from "jsonwebtoken";
 import { query } from "../lib/postgres.js";
 

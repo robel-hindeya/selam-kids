@@ -1,3 +1,10 @@
+/**
+ * # NOTE: auth.js
+ * Role: Authentication Controller
+ * Layer: Presentation / REST API
+ * Description: Handles user signup, login, session validation, logout, and Google OAuth.
+ */
+
 import { Router } from "express";
 import passport from "../auth/google.js";
 import jwt from "jsonwebtoken";

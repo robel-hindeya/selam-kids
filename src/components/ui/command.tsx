@@ -1,3 +1,10 @@
+/**
+ * # NOTE: command.tsx
+ * Role: Command UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible command primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 "use client";
 
 import * as React from "react";

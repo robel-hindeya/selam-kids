@@ -1,3 +1,10 @@
+/**
+ * # NOTE: EditProfileModal.tsx
+ * Role: Profile Editor Dialog Component
+ * Layer: Presentation / Component
+ * Description: Modal allowing kid readers to customize their username, age, gender, and avatar.
+ */
+
 import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";

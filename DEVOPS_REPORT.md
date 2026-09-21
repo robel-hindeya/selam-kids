@@ -1,3 +1,9 @@
+<!-- # NOTE: DEVOPS_REPORT.md
+     Role: DevOps Security & Infrastructure Audit Report
+     Layer: Documentation / Operations
+     Description: Comprehensive audit of architecture vulnerabilities, risk analysis, and remediation status.
+-->
+
 # Selam Kids — DevOps Readiness Report
 
 > **Generated:** 2026-09-16
@@ -280,7 +286,7 @@ PR / push to main
 
 ### Critical (do these first)
 
-1. **C1 — Secure or remove the legacy backend.** Either delete `src/backend/server.js` + `src/api/index.js` or add the same auth middleware used by `backend/`. Currently anyone can delete feedback and edit all content through that path.
+1. **C1 — Secure or remove the legacy backend. [RESOLVED]** Removed legacy `src/backend/` and `src/api/` forwarders. The platform now exclusively runs on the secure Express/Postgres backend (`backend/`) with JWT authentication and RBAC.
 2. **C2 — Remove the hardcoded JWT fallback.** Make `JWT_SECRET` required everywhere and fail fast when missing (as `backend/` already does).
 
 ### High

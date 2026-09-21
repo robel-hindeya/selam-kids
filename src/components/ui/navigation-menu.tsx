@@ -1,3 +1,10 @@
+/**
+ * # NOTE: navigation-menu.tsx
+ * Role: Navigation-menu UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible navigation-menu primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
 import { cva } from "class-variance-authority";

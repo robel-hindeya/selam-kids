@@ -1,3 +1,10 @@
+/**
+ * # NOTE: logger.js
+ * Role: Payment Structured Audit Logger
+ * Layer: Domain Service / Observability
+ * Description: Structured logger tracking payment sessions, verifications, failures, and fulfillment.
+ */
+
 // Structured payment logging. Every payment event is emitted as a single
 // JSON line so it can be indexed by any log pipeline (Vercel, pino, etc.).
 // Never pass secret keys, credentials, card data, OTPs or PINs to these calls.

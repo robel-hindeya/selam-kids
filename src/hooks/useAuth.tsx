@@ -1,3 +1,10 @@
+/**
+ * # NOTE: useAuth.tsx
+ * Role: Authentication State Hook & Provider
+ * Layer: Application / State Management
+ * Description: Provides reactive authentication state bridging PostgreSQL backend and Supabase.
+ */
+
 import {
   createContext,
   useCallback,

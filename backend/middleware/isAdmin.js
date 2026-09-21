@@ -1,3 +1,10 @@
+/**
+ * # NOTE: isAdmin.js
+ * Role: Role-Based Access Control Guard
+ * Layer: Application / Security Middleware
+ * Description: Guards administrative routes, ensuring only authorized admin users proceed.
+ */
+
 import User from "../models/User.js";
 
 export async function requireAdmin(req, res, next) {

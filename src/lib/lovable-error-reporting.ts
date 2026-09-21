@@ -1,3 +1,10 @@
+/**
+ * # NOTE: lovable-error-reporting.ts
+ * Role: Lovable Telemetry Bridge
+ * Layer: Infrastructure / Telemetry
+ * Description: Transmits unhandled client and server errors to Lovable diagnostic services.
+ */
+
 type LovableErrorOptions = {
   mechanism?: "manual" | "onerror" | "unhandledrejection" | "react_error_boundary";
   handled?: boolean;

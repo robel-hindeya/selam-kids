@@ -1,3 +1,10 @@
+/**
+ * # NOTE: payments.test.js
+ * Role: Payment Route Integration Tests
+ * Layer: Testing / API
+ * Description: Tests /api/payments/chapa/initialize and verify endpoints with mocked dependencies.
+ */
+
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import express from "express";
 import request from "supertest";

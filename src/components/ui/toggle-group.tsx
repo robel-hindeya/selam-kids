@@ -1,3 +1,10 @@
+/**
+ * # NOTE: toggle-group.tsx
+ * Role: Toggle-group UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible toggle-group primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 "use client";
 
 import * as React from "react";

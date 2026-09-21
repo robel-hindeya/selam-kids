@@ -1,3 +1,10 @@
+/**
+ * # NOTE: supabaseSync.js
+ * Role: Supabase User Synchronization Adapter
+ * Layer: Domain Service / Integration
+ * Description: Synchronizes Supabase authentication records into PostgreSQL users table.
+ */
+
 import { createClient } from "@supabase/supabase-js";
 import { query } from "./postgres.js";
 

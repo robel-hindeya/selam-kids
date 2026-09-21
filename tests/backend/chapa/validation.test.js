@@ -1,3 +1,10 @@
+/**
+ * # NOTE: validation.test.js
+ * Role: Payment Schema Validation Tests
+ * Layer: Testing / Payments
+ * Description: Tests request payload validation rules, email checks, and amount constraints.
+ */
+
 import { describe, it, expect } from "vitest";
 import crypto from "node:crypto";
 import {

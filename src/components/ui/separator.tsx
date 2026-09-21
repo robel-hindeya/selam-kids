@@ -1,3 +1,10 @@
+/**
+ * # NOTE: separator.tsx
+ * Role: Separator UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible separator primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
 

@@ -1,3 +1,10 @@
+/**
+ * # NOTE: library.tsx
+ * Role: Storybook Library Catalog Route
+ * Layer: Presentation / Page
+ * Description: Searchable and filterable catalog of all available magazines and stories.
+ */
+
 import { createFileRoute } from "@tanstack/react-router";
 import { BookMarked, Clock, Heart } from "lucide-react";
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";

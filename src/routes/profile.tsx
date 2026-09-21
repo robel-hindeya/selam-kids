@@ -1,3 +1,10 @@
+/**
+ * # NOTE: profile.tsx
+ * Role: User Profile Route
+ * Layer: Presentation / Page
+ * Description: Personalized reader profile showing reading statistics, age, gender, and avatar.
+ */
+
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Award, BookOpen, Flame, Sparkles, Star, Trophy } from "lucide-react";

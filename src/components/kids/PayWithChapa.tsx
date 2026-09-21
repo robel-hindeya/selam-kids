@@ -1,3 +1,10 @@
+/**
+ * # NOTE: PayWithChapa.tsx
+ * Role: Chapa Payment Action Component
+ * Layer: Presentation / Component
+ * Description: Branded checkout button connecting readers to Chapa payment portal.
+ */
+
 import { useState } from "react";
 import { Lock, ShoppingBag, Sparkles } from "lucide-react";
 import {

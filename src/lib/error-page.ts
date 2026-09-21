@@ -1,3 +1,10 @@
+/**
+ * # NOTE: error-page.ts
+ * Role: Emergency Error Page Generator
+ * Layer: Presentation / Disaster Recovery
+ * Description: Produces a clean fallback HTML document when catastrophic SSR failures occur.
+ */
+
 export function renderErrorPage(): string {
   return `<!doctype html>
 <html lang="en">

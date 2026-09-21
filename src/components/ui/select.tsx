@@ -1,3 +1,10 @@
+/**
+ * # NOTE: select.tsx
+ * Role: Select UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible select primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 "use client";
 
 import * as React from "react";

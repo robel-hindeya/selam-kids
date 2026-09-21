@@ -1,3 +1,10 @@
+/**
+ * # NOTE: admin.tsx
+ * Role: Admin Management Dashboard Route
+ * Layer: Presentation / Page
+ * Description: Admin workspace for publishing magazines, managing banners, and tracking sales.
+ */
+
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { Download, ImagePlus, LogOut, Pencil, Shield, CreditCard } from "lucide-react";

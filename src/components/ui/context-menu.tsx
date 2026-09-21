@@ -1,3 +1,10 @@
+/**
+ * # NOTE: context-menu.tsx
+ * Role: Context-menu UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible context-menu primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { Check, ChevronRight, Circle } from "lucide-react";

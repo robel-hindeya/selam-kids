@@ -1,3 +1,10 @@
+/**
+ * # NOTE: payments.js
+ * Role: Payments Controller
+ * Layer: Presentation / REST API
+ * Description: Exposes endpoints to initialize Chapa checkout sessions and verify transactions.
+ */
+
 import { Router } from "express";
 import { Magazine } from "../models/Content.js";
 import { requireAuth } from "../middleware/auth.js";

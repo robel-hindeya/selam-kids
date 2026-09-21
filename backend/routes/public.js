@@ -1,3 +1,10 @@
+/**
+ * # NOTE: public.js
+ * Role: Public Content Controller
+ * Layer: Presentation / REST API
+ * Description: Serves public magazines, banners, feedback submissions, and health checks.
+ */
+
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { Magazine, Banner, Feedback } from "../models/Content.js";

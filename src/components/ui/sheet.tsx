@@ -1,3 +1,10 @@
+/**
+ * # NOTE: sheet.tsx
+ * Role: Sheet UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible sheet primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 "use client";
 
 import * as React from "react";

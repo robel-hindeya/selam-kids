@@ -1,3 +1,10 @@
+/**
+ * # NOTE: payments.ts
+ * Role: Frontend Payment Client Library
+ * Layer: Application / Payments
+ * Description: Client-side functions for initiating Chapa checkouts and handling redirects.
+ */
+
 export type PaymentStatus =
   "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED" | "CANCELLED" | "EXPIRED" | "REFUNDED";
 

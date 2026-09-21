@@ -1,3 +1,10 @@
+/**
+ * # NOTE: form.tsx
+ * Role: Form UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible form primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";

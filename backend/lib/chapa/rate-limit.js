@@ -1,3 +1,10 @@
+/**
+ * # NOTE: rate-limit.js
+ * Role: Payment Rate Limiter
+ * Layer: Infrastructure / Security
+ * Description: Sliding-window rate limiter protecting checkout initialization from abuse.
+ */
+
 import crypto from "node:crypto";
 
 // Lightweight in-memory sliding-window rate limiter. Suitable for a single

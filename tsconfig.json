@@ -1,4 +1,5 @@
 {
+  // # NOTE: tsconfig.json - TypeScript Compiler Configuration & Type Checking
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts", "eslint.config.js"],
   "compilerOptions": {
     "target": "ES2022",

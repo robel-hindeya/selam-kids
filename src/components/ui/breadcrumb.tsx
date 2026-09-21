@@ -1,3 +1,10 @@
+/**
+ * # NOTE: breadcrumb.tsx
+ * Role: Breadcrumb UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible breadcrumb primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { ChevronRight, MoreHorizontal } from "lucide-react";

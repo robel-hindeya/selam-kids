@@ -1,3 +1,10 @@
+/**
+ * # NOTE: story.$slug.tsx
+ * Role: Digital Story Reader Route
+ * Layer: Presentation / Page
+ * Description: Full-page story reader with interactive pages, illustrations, and Chapa purchase wall.
+ */
+
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
@@ -9,7 +16,6 @@ import {
   Heart,
   Lightbulb,
   MoreHorizontal,
-  Sparkles,
 } from "lucide-react";
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
 import { PayWithChapa } from "@/components/kids/PayWithChapa";
@@ -231,9 +237,8 @@ function StoryPage() {
                       onClick={goNext}
                       className="group inline-flex items-center gap-1 rounded-3xl border-2 border-dashed border-primary/30 bg-primary/10 px-4 py-2 font-display text-sm font-extrabold text-primary transition-all hover:bg-primary/20"
                     >
-                      <Sparkles className="size-4 transition-transform group-hover:rotate-12" />
                       Read more
-                      <ChevronRight className="size-4 animate-bounce" />
+                      <ChevronRight className="size-4" />
                     </button>
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-3xl bg-secondary/40 px-4 py-2 font-display text-sm font-extrabold text-accent">

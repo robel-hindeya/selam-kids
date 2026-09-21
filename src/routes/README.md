@@ -1,3 +1,9 @@
+<!-- # NOTE: README.md
+     Role: Routing Hierarchy Specification
+     Layer: Documentation / Routing
+     Description: Explains file-based routing structure, path parameters, and navigation layouts.
+-->
+
 # Routes
 
 TanStack Start uses **file-based routing**. Every `.tsx` file in this directory

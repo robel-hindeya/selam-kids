@@ -1,3 +1,10 @@
+/**
+ * # NOTE: service.test.js
+ * Role: Payment Service Unit Tests
+ * Layer: Testing / Payments
+ * Description: Tests checkout session creation, verification logic, and idempotent fulfillment.
+ */
+
 import { describe, it, expect, vi } from "vitest";
 
 const mockPayment = (overrides = {}) => ({
@@ -245,7 +252,9 @@ describe("createPaymentService.verifyAndFulfillPayment", () => {
       source: "callback",
     });
     expect(result.status).toBe("SUCCESS");
-    expect(client.verifyTransaction).toHaveBeenCalledWith("HSC-ORDER-test-12AB34");
+    expect(client.verifyTransaction).toHaveBeenCalledWith("HSC-ORDER-test-12AB34", {
+      chapaTransactionId: null,
+    });
     expect(payments.setPaymentStatus).toHaveBeenCalledWith(
       "payment-1",
       "PROCESSING",

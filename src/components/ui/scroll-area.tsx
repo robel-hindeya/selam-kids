@@ -1,3 +1,10 @@
+/**
+ * # NOTE: scroll-area.tsx
+ * Role: Scroll-area UI Primitive Component
+ * Layer: Presentation / UI Primitives
+ * Description: Accessible scroll-area primitive built with Radix UI and styled with Tailwind CSS.
+ */
+
 import * as React from "react";
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 

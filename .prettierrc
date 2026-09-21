@@ -1,4 +1,5 @@
 {
+  "// # NOTE:": "Prettier Code Formatting Rules | Layer: Tooling / Code Style",
   "printWidth": 100,
   "semi": true,
   "singleQuote": false,

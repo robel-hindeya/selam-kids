@@ -1,3 +1,10 @@
+/**
+ * # NOTE: app.js
+ * Role: Express Application Configuration
+ * Layer: Application / HTTP Pipeline
+ * Description: Configures middleware (CORS, body-parser with raw-body capture, cookies, passport) and mounts API routes.
+ */
+
 import "dotenv/config";
 import express from "express";
 import cors from "cors";

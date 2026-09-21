@@ -1,3 +1,10 @@
+/**
+ * # NOTE: Sidebar.tsx
+ * Role: Navigation Shell & Header Component
+ * Layer: Presentation / Component
+ * Description: Navigation drawer, top bar, and mobile navigation bar for kid readers.
+ */
+
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, MessageCircle, Library, ShieldCheck, Lock, Pencil, LogOut } from "lucide-react";
