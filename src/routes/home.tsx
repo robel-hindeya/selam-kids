@@ -10,9 +10,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
 import { StoryCard } from "@/components/kids/StoryCard";
-import heroReading from "@/assets/hero-reading.jpg";
 import heroMagazine from "@/assets/hero-magazine.jpg";
-import heroKidsMagazine from "@/assets/hero-kids-magazine.jpg";
 
 export const Route = createFileRoute("/home")({
   head: () => ({
@@ -35,35 +33,16 @@ export const Route = createFileRoute("/home")({
   component: HomePage,
 });
 
-const slides = [
-  {
-    image: heroMagazine,
-    alt: "Open kids magazine lying on green grass",
-    kicker: "September editions",
-    title: "selamkids",
-  },
-  {
-    image: heroKidsMagazine,
-    alt: "Kids reading magazines together under a big autumn tree",
-    kicker: "September editions",
-    title: "selamkids",
-  },
-  {
-    image: heroReading,
-    alt: "Smiling child reading a magazine on a sunny hill",
-    kicker: "September editions",
-    title: "selamkids",
-  },
-];
-
 function HeroSlider() {
   const [slides, setSlides] = useState<any[]>([]);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
     fetch("/api/banners")
-      .then((res) => res.json())
-      .then((data) => setSlides(data))
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data)) setSlides(data);
+      })
       .catch(console.error);
   }, []);
 
@@ -83,11 +62,14 @@ function HeroSlider() {
         className="flex transition-transform duration-700 ease-out"
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
-        {slides.map((s) => (
+        {slides.map((s, i) => (
           <img
-            key={s._id || s.imageUrl}
-            src={s.imageUrl || s.image}
-            alt={s.title}
+            key={s._id || s.imageUrl || i}
+            src={s.imageUrl || s.image || heroMagazine}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = heroMagazine;
+            }}
+            alt={s.title || "Kids Magazine"}
             width={1280}
             height={640}
             className="h-72 w-full shrink-0 object-cover sm:h-80"
@@ -98,10 +80,10 @@ function HeroSlider() {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,oklch(0.45_0.14_255/0.92)_0%,oklch(0.45_0.14_255/0.55)_55%,transparent_85%)]" />
       <div className="absolute inset-y-0 left-0 flex max-w-sm flex-col justify-center gap-4 p-8">
         <span className="w-fit rounded-full bg-secondary px-4 py-1.5 font-display text-xs font-extrabold text-secondary-foreground">
-          {slides[index]?.kicker}
+          {slides[index]?.kicker || "Featured"}
         </span>
         <h1 className="font-display text-4xl leading-tight font-extrabold text-primary-foreground sm:text-5xl">
-          {slides[index]?.title}
+          {slides[index]?.title || "Selam Kids"}
         </h1>
         {slides[index]?.magazineId ? (
           <Link
@@ -139,11 +121,12 @@ function HeroSlider() {
       <div className="absolute bottom-4 left-8 flex gap-2">
         {slides.map((s, i) => (
           <button
-            key={s._id || s.imageUrl}
+            key={s._id || s.imageUrl || i}
             aria-label={`Go to slide ${i + 1}`}
             onClick={() => setIndex(i)}
-            className={`h-2.5 rounded-full transition-all ${i === index ? "w-7 bg-secondary" : "w-2.5 bg-card/70"
-              }`}
+            className={`h-2.5 rounded-full transition-all ${
+              i === index ? "w-7 bg-secondary" : "w-2.5 bg-card/70"
+            }`}
           />
         ))}
       </div>
@@ -153,13 +136,26 @@ function HeroSlider() {
 
 function HomePage() {
   const [dynamicStories, setDynamicStories] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetch("/api/magazines")
-      .then((res) => res.json())
-      .then((data) => setDynamicStories(data))
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data)) setDynamicStories(data);
+      })
       .catch(console.error);
   }, []);
+
+  const filteredStories = dynamicStories.filter((m) => {
+    if (!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      m.title?.toLowerCase().includes(q) ||
+      m.description?.toLowerCase().includes(q) ||
+      m.category?.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-background p-4 pb-24 font-sans lg:p-8 lg:pb-8">
@@ -172,6 +168,8 @@ function HomePage() {
             <Search className="size-4 text-muted-foreground" />
             <input
               type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search stories, topics, or keywords"
               aria-label="Search stories"
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
@@ -189,23 +187,31 @@ function HomePage() {
 
         <section className="mt-8">
           <div className="flex items-baseline justify-between">
-            <h2 className="font-display text-xl font-extrabold">Featured This Week</h2>
-            <button className="text-sm font-bold text-primary hover:underline">See All</button>
+            <h2 className="font-display text-xl font-extrabold">All Magazines & Posts</h2>
+            <span className="text-xs font-bold text-muted-foreground">
+              {filteredStories.length} {filteredStories.length === 1 ? "magazine" : "magazines"}
+            </span>
           </div>
           <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {dynamicStories.length > 0 ? dynamicStories.map((m) => (
-              <StoryCard
-                key={m._id}
-                slug={`mag-${m._id}`}
-                title={m.title}
-                description={m.description || "A wonderful new edition is waiting for you."}
-                image={m.coverUrl}
-                minutes={m.minutes || 5}
-                likes={m.likes || 0}
-                tint="bg-secondary/15"
-                edition={m.edition || "New Edition"}
-              />
-            )) : (
+            {filteredStories.length > 0 ? (
+              filteredStories.map((m) => (
+                <StoryCard
+                  key={m._id}
+                  slug={`mag-${m._id}`}
+                  title={m.title}
+                  description={m.description || "A wonderful new edition is waiting for you."}
+                  image={m.coverUrl}
+                  minutes={m.minutes || 5}
+                  likes={m.likes || 0}
+                  tint="bg-secondary/15"
+                  edition={m.edition || "New Edition"}
+                />
+              ))
+            ) : dynamicStories.length > 0 ? (
+              <p className="col-span-full rounded-3xl bg-card p-8 text-center text-sm font-bold text-muted-foreground">
+                No magazines matching &quot;{searchTerm}&quot;
+              </p>
+            ) : (
               <p className="col-span-full rounded-3xl bg-card p-8 text-center text-sm font-bold text-muted-foreground">
                 No magazines have been published yet.
               </p>

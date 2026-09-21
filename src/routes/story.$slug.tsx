@@ -20,6 +20,7 @@ import {
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
 import { PayWithChapa } from "@/components/kids/PayWithChapa";
 import { formatBirr } from "@/lib/payments";
+
 type Story = {
   slug: string;
   image: string;
@@ -72,6 +73,8 @@ function StoryPage() {
   const [dynamicStory, setDynamicStory] = useState<Story | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
+  const [isPaid, setIsPaid] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     if (!slug.startsWith("mag-")) {
@@ -87,18 +90,23 @@ function StoryPage() {
         setDynamicStory({
           slug,
           image: magazine.coverUrl,
-          storyImages: Array.isArray(magazine.storyImages)
-            ? magazine.storyImages
-            : magazine.storyImageUrl
-              ? [magazine.storyImageUrl]
-              : [],
+          storyImages:
+            Array.isArray(magazine.storyImages) && magazine.storyImages.length > 0
+              ? magazine.storyImages
+              : magazine.storyImageUrl
+                ? [magazine.storyImageUrl]
+                : [],
           title: magazine.title,
           description: magazine.description || "A wonderful new magazine is waiting for you.",
           minutes: magazine.minutes || 5,
           likes: magazine.likes || 0,
           tint: "bg-secondary/15",
           category: magazine.category || "Magazine",
-          date: magazine.date || new Date(magazine.createdAt).toLocaleDateString(),
+          date:
+            magazine.date ||
+            (magazine.createdAt
+              ? new Date(magazine.createdAt).toLocaleDateString()
+              : "New Edition"),
           paragraphs: magazine.paragraphs?.length
             ? magazine.paragraphs
             : [magazine.description || "This story is ready to be explored."],
@@ -107,10 +115,73 @@ function StoryPage() {
           priceCents: magazine.priceCents ?? 5000,
         });
       })
+      .catch(console.error)
       .finally(() => setLoading(false));
+
+    // Check if user has purchased this magazine
+    fetch("/api/library", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((lib) => {
+        if (Array.isArray(lib)) {
+          const owned = lib.some((item) => item._id === magazineId || item.id === magazineId);
+          setIsPaid(owned);
+        }
+      })
+      .catch(() => {});
+
+    // Check favorite status from localStorage
+    try {
+      const favs = JSON.parse(localStorage.getItem("selam_favorites") || "[]");
+      setIsFavorite(Array.isArray(favs) && favs.includes(slug));
+    } catch {}
   }, [slug]);
 
   const story = dynamicStory;
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil((story?.paragraphs?.length || 1) / PARAGRAPHS_PER_PAGE),
+    story?.storyImages?.length || 1,
+  );
+
+  // Resume and track reading progress
+  useEffect(() => {
+    if (!slug) return;
+    try {
+      const progress = JSON.parse(localStorage.getItem("selam_reading_progress") || "{}");
+      if (progress[slug]?.page) {
+        setPage(Math.min(progress[slug].page, totalPages - 1));
+      }
+    } catch {}
+  }, [slug, totalPages]);
+
+  useEffect(() => {
+    if (!slug || totalPages <= 1) return;
+    try {
+      const progress = JSON.parse(localStorage.getItem("selam_reading_progress") || "{}");
+      if (page > 0 && page < totalPages - 1) {
+        progress[slug] = { page, totalPages, updatedAt: Date.now() };
+      } else if (page === totalPages - 1) {
+        delete progress[slug];
+      }
+      localStorage.setItem("selam_reading_progress", JSON.stringify(progress));
+    } catch {}
+  }, [page, slug, totalPages]);
+
+  const toggleFavorite = () => {
+    try {
+      const favs = JSON.parse(localStorage.getItem("selam_favorites") || "[]");
+      let next: string[];
+      if (favs.includes(slug)) {
+        next = favs.filter((s: string) => s !== slug);
+        setIsFavorite(false);
+      } else {
+        next = [...favs, slug];
+        setIsFavorite(true);
+      }
+      localStorage.setItem("selam_favorites", JSON.stringify(next));
+    } catch {}
+  };
 
   if (loading) {
     return (
@@ -119,11 +190,6 @@ function StoryPage() {
   }
   if (!story) return <StoryNotFound />;
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(story.paragraphs.length / PARAGRAPHS_PER_PAGE),
-    story.storyImages.length,
-  );
   const pageParagraphs = story.paragraphs.slice(
     page * PARAGRAPHS_PER_PAGE,
     page * PARAGRAPHS_PER_PAGE + PARAGRAPHS_PER_PAGE,
@@ -156,10 +222,13 @@ function StoryPage() {
             </Link>
             <div className="flex items-center gap-2">
               <button
-                aria-label="Save story"
-                className="grid size-10 place-items-center rounded-full bg-card text-muted-foreground shadow-[var(--shadow-soft)] transition-colors hover:text-primary"
+                onClick={toggleFavorite}
+                aria-label={isFavorite ? "Remove from favorites" : "Save story to favorites"}
+                className={`grid size-10 place-items-center rounded-full bg-card shadow-[var(--shadow-soft)] transition-colors ${
+                  isFavorite ? "text-accent" : "text-muted-foreground hover:text-primary"
+                }`}
               >
-                <Bookmark className="size-5" />
+                <Bookmark className={`size-5 ${isFavorite ? "fill-current" : ""}`} />
               </button>
               <button
                 aria-label="More options"
@@ -259,26 +328,43 @@ function StoryPage() {
               </div>
 
               {slug.startsWith("mag-") && typeof story.priceCents === "number" && (
-                <div className="mt-6 flex flex-col items-center gap-3 rounded-4xl bg-primary/10 p-6 text-center shadow-[var(--shadow-soft)] sm:flex-row sm:justify-between sm:text-left">
-                  <div>
-                    <p className="font-display text-lg font-extrabold">Get this magazine</p>
-                    <p className="mt-0.5 text-sm text-muted-foreground">
-                      Add it to your library forever — {formatBirr(story.priceCents / 100)}.
-                    </p>
+                isPaid ? (
+                  <div className="mt-6 flex flex-col items-center gap-3 rounded-4xl bg-secondary/25 p-6 text-center shadow-[var(--shadow-soft)] sm:flex-row sm:justify-between sm:text-left">
+                    <div>
+                      <p className="font-display text-lg font-extrabold text-secondary-foreground">In Your Library</p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        You have purchased this magazine. It is saved in your library bookshelf forever.
+                      </p>
+                    </div>
+                    <Link
+                      to="/library"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-5 py-2.5 font-display text-sm font-extrabold text-secondary-foreground shadow-[var(--shadow-soft)] transition-transform hover:scale-105"
+                    >
+                      ✓ View in Library
+                    </Link>
                   </div>
-                  <PayWithChapa
-                    product={{
-                      id: slug.slice(4),
-                      title: story.title,
-                      description: story.description,
-                      priceCents: story.priceCents,
-                      currency: "ETB",
-                      coverUrl: story.image,
-                    }}
-                    triggerLabel={`Buy · ${formatBirr(story.priceCents / 100)}`}
-                    className="font-display rounded-full px-6"
-                  />
-                </div>
+                ) : (
+                  <div className="mt-6 flex flex-col items-center gap-3 rounded-4xl bg-primary/10 p-6 text-center shadow-[var(--shadow-soft)] sm:flex-row sm:justify-between sm:text-left">
+                    <div>
+                      <p className="font-display text-lg font-extrabold">Get this magazine</p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        Add it to your library forever — {formatBirr(story.priceCents / 100)}.
+                      </p>
+                    </div>
+                    <PayWithChapa
+                      product={{
+                        id: slug.slice(4),
+                        title: story.title,
+                        description: story.description,
+                        priceCents: story.priceCents,
+                        currency: "ETB",
+                        coverUrl: story.image,
+                      }}
+                      triggerLabel={`Buy · ${formatBirr(story.priceCents / 100)}`}
+                      className="font-display rounded-full px-6"
+                    />
+                  </div>
+                )
               )}
             </div>
           </article>

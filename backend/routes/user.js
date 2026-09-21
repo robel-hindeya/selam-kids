@@ -9,8 +9,10 @@ import { Router } from "express";
 import multer from "multer";
 import path from "path";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { requireAuth } from "../middleware/auth.js";
+import { query } from "../lib/postgres.js";
 
 const router = Router();
 
@@ -40,7 +42,10 @@ const upload = multer({
 // GET /api/me — return current user
 router.get("/me", requireAuth, async (req, res) => {
     try {
-        const user = await User.findById(req.userId).lean();
+        const user = await Promise.race([
+            User.findById(req.userId).lean(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 12000)),
+        ]);
         if (!user) return res.status(404).json({ error: "User not found" });
         res.json(user);
     } catch {
@@ -84,5 +89,76 @@ router.post("/upload", requireAuth, upload.single("file"), async (req, res) => {
     const url = `/uploads/${req.file.filename}`;
     res.json({ url });
 });
+
+// GET /api/library — return only books/magazines paid for by the current authenticated user
+async function handleUserLibrary(req, res) {
+    try {
+        let userId = null;
+        if (req.cookies?.token) {
+            try {
+                const payload = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
+                userId = payload.userId;
+            } catch {}
+        }
+        if (!userId && req.headers.authorization?.startsWith("Bearer ")) {
+            try {
+                const payload = jwt.verify(req.headers.authorization.slice(7), process.env.JWT_SECRET);
+                userId = payload.userId;
+            } catch {}
+        }
+
+        if (!userId) {
+            return res.json([]);
+        }
+
+        const libraryQuery = query(
+            `SELECT DISTINCT m.id, m.title, m.description, m.cover_url, m.minutes, m.likes, m.edition, m.category, m.date, m.paragraphs, m.fun_fact, m.target_url, m.story_images, m.price_cents, m.active, m.created_at, m.updated_at
+             FROM magazines m
+             WHERE m.id IN (
+                 SELECT magazine_id FROM magazine_sales WHERE user_id = $1
+                 UNION
+                 SELECT product_id FROM orders WHERE user_id = $1 AND status = 'PAID'
+                 UNION
+                 SELECT o.product_id FROM payments p JOIN orders o ON p.order_id = o.id WHERE p.user_id = $1 AND p.status = 'SUCCESS'
+             )
+             ORDER BY m.created_at DESC`,
+            [userId]
+        );
+
+        const result = await Promise.race([
+            libraryQuery,
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 12000)),
+        ]);
+
+        const magazines = (result?.rows || []).map((row) => ({
+            _id: row.id,
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            coverUrl: row.cover_url,
+            minutes: row.minutes,
+            likes: row.likes,
+            edition: row.edition,
+            category: row.category,
+            date: row.date,
+            paragraphs: row.paragraphs,
+            funFact: row.fun_fact,
+            targetUrl: row.target_url,
+            storyImages: row.story_images,
+            priceCents: row.price_cents,
+            active: row.active,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+        }));
+
+        res.json(magazines);
+    } catch (error) {
+        console.warn("User library fetch warning:", error.message);
+        res.json([]);
+    }
+}
+
+router.get("/library", handleUserLibrary);
+router.get("/user/library", handleUserLibrary);
 
 export default router;

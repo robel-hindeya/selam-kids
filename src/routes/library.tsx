@@ -5,29 +5,27 @@
  * Description: Searchable and filterable catalog of all available magazines and stories.
  */
 
-import { createFileRoute } from "@tanstack/react-router";
-import { BookMarked, Clock, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { BookMarked, Clock, Heart, ShoppingBag } from "lucide-react";
 import { MobileHeader, MobileNav, Sidebar } from "@/components/kids/Sidebar";
 import { LoginModal } from "@/components/kids/LoginModal";
 import { useAuth } from "@/hooks/useAuth";
 import { StoryCard } from "@/components/kids/StoryCard";
-import cardSpace from "@/assets/card-space.jpg";
-
-import cardTrees from "@/assets/card-trees.jpg";
 
 export const Route = createFileRoute("/library")({
   head: () => ({
     meta: [
-      { title: "My Library — Saved Kids Stories | Little Read" },
+      { title: "My Library — Paid Kids Books & Magazines | Selam Kids" },
       {
         name: "description",
         content:
-          "Your own bookshelf on Little Read: saved stories, books you are still reading and all-time favorites for little readers.",
+          "Your personal bookshelf of purchased stories, magazines you are reading, and favorites.",
       },
-      { property: "og:title", content: "My Library — Saved Kids Stories" },
+      { property: "og:title", content: "My Library — Paid Kids Books" },
       {
         property: "og:description",
-        content: "Keep every favorite story in one cozy bookshelf.",
+        content: "Every paid magazine you own, all in one cozy shelf.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -36,49 +34,56 @@ export const Route = createFileRoute("/library")({
   component: LibraryPage,
 });
 
-const reading = [
-  {
-    image: cardSpace,
-    slug: "the-amazing-world-of-space",
-    title: "The Amazing World of Space",
-    description: "You stopped on page 6 — rockets are waiting!",
-    minutes: 5,
-    likes: 254,
-    tint: "bg-grape/15",
-    edition: "Aug edition",
-  },
-  {
-    image: cardTrees,
-    slug: "how-trees-help-our-planet",
-    title: "How Trees Help Our Planet",
-    description: "Half way through the forest adventure.",
-    minutes: 4,
-    likes: 143,
-    tint: "bg-leaf/20",
-    edition: "Sep edition",
-  },
-];
-
-const stats = [
-  { label: "Magazines saved", value: 12, icon: BookMarked, tint: "bg-grape/15" },
-  { label: "Still reading", value: 2, icon: Clock, tint: "bg-secondary/30" },
-  { label: "Favorites", value: 7, icon: Heart, tint: "bg-accent/20" },
-];
-
-import { useState, useEffect } from "react";
-
 function LibraryPage() {
   const { isLoggedIn } = useAuth();
-  const [myMagazines, setMyMagazines] = useState<any[]>(reading);
+  const [myMagazines, setMyMagazines] = useState<any[]>([]);
+  const [stillReadingCount, setStillReadingCount] = useState(0);
+  const [favoritesCount, setFavoritesCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/magazines")
-      .then((res) => res.json())
+    if (!isLoggedIn) {
+      setMyMagazines([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    fetch("/api/library", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
-        if (data && data.length > 0) setMyMagazines(data);
+        if (Array.isArray(data)) {
+          setMyMagazines(data);
+        } else {
+          setMyMagazines([]);
+        }
       })
-      .catch(console.error);
-  }, []);
+      .catch((err) => {
+        console.warn("Library fetch error:", err);
+        setMyMagazines([]);
+      })
+      .finally(() => setLoading(false));
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    try {
+      const progress = JSON.parse(localStorage.getItem("selam_reading_progress") || "{}");
+      const inProgressBooks = Object.keys(progress).length;
+      setStillReadingCount(inProgressBooks);
+
+      const favs = JSON.parse(localStorage.getItem("selam_favorites") || "[]");
+      setFavoritesCount(Array.isArray(favs) ? favs.length : 0);
+    } catch {
+      setStillReadingCount(0);
+      setFavoritesCount(0);
+    }
+  }, [myMagazines]);
+
+  const stats = [
+    { label: "Paid Books", value: myMagazines.length, icon: BookMarked, tint: "bg-grape/15" },
+    { label: "Still reading", value: stillReadingCount, icon: Clock, tint: "bg-secondary/30" },
+    { label: "Favorites", value: favoritesCount, icon: Heart, tint: "bg-accent/20" },
+  ];
 
   return (
     <div className="relative min-h-screen bg-background p-4 pb-24 font-sans lg:p-8 lg:pb-8">
@@ -89,7 +94,7 @@ function LibraryPage() {
         <header className="rounded-4xl bg-primary/10 p-6 shadow-[var(--shadow-card)]">
           <h1 className="font-display text-2xl font-extrabold sm:text-3xl">My Library</h1>
           <p className="mt-1 text-sm font-bold text-muted-foreground">
-            Every story you saved, all in one cozy shelf.
+            Every paid story you own, all in one cozy shelf.
           </p>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -115,21 +120,54 @@ function LibraryPage() {
         </header>
 
         <section className="mt-8">
-          <h2 className="font-display text-xl font-extrabold">My Magazines</h2>
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-xl font-extrabold">My Paid Books</h2>
+            <span className="text-xs font-bold text-muted-foreground">
+              {myMagazines.length} {myMagazines.length === 1 ? "magazine" : "magazines"} owned
+            </span>
+          </div>
+
           <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {myMagazines.map((s) => (
-              <StoryCard
-                key={s._id || s.slug}
-                slug={s._id ? `mag-${s._id}` : s.slug}
-                title={s.title}
-                description={s.description || "A wonderful read."}
-                image={s.coverUrl || s.image}
-                minutes={s.minutes || 5}
-                likes={s.likes || 120}
-                tint={s.tint || "bg-leaf/20"}
-                edition={s.edition || "New"}
-              />
-            ))}
+            {loading ? (
+              <p className="col-span-full rounded-3xl bg-card p-8 text-center text-sm font-bold text-muted-foreground">
+                Loading your library...
+              </p>
+            ) : !isLoggedIn ? (
+              <div className="col-span-full rounded-3xl bg-card p-8 text-center">
+                <p className="text-sm font-bold text-muted-foreground">
+                  Please log in to view your purchased books and saved reading library.
+                </p>
+              </div>
+            ) : myMagazines.length > 0 ? (
+              myMagazines.map((s) => (
+                <StoryCard
+                  key={s._id || s.slug}
+                  slug={s._id ? `mag-${s._id}` : s.slug}
+                  title={s.title}
+                  description={s.description || "A wonderful read."}
+                  image={s.coverUrl || s.image}
+                  minutes={s.minutes || 5}
+                  likes={s.likes || 0}
+                  tint={s.tint || "bg-leaf/20"}
+                  edition={s.edition || "Paid Edition"}
+                />
+              ))
+            ) : (
+              <div className="col-span-full flex flex-col items-center justify-center rounded-3xl bg-card p-10 text-center shadow-[var(--shadow-soft)]">
+                <BookMarked className="size-12 text-muted-foreground/50 mb-3" />
+                <h3 className="font-display text-lg font-extrabold">No Paid Books Yet</h3>
+                <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                  You haven&apos;t purchased any magazines yet. Explore our catalog on the home page to start your collection!
+                </p>
+                <Link
+                  to="/home"
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 font-display text-sm font-extrabold text-primary-foreground shadow-[var(--shadow-soft)] transition-transform hover:scale-105"
+                >
+                  <ShoppingBag className="size-4" />
+                  Explore Catalog
+                </Link>
+              </div>
+            )}
           </div>
         </section>
       </main>

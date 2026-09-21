@@ -5,8 +5,10 @@
  * Description: Visual preview card showing issue cover, reading duration, likes, and badges.
  */
 
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Clock, Heart } from "lucide-react";
+import cardPlaceholder from "@/assets/card-trees.jpg";
 
 type Props = {
   image: string;
@@ -29,12 +31,15 @@ export function StoryCard({
   slug,
   edition,
 }: Props) {
+  const [imgSrc, setImgSrc] = useState(image || cardPlaceholder);
+
   return (
     <Link to="/story/$slug" params={{ slug }} className="block focus:outline-none">
       <article className="group cursor-pointer overflow-hidden rounded-4xl bg-card shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-2 hover:rotate-1 hover:shadow-[var(--shadow-soft)]">
         <div className={`p-3 ${tint}`}>
           <img
-            src={image}
+            src={imgSrc}
+            onError={() => setImgSrc(cardPlaceholder)}
             alt={title}
             loading="lazy"
             width={768}

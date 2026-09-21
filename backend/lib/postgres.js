@@ -15,17 +15,32 @@ const { Pool } = pg;
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
-if (!databaseUrl && process.env.NODE_ENV === "production") {
-  throw new Error("DATABASE_URL is required in production");
+if (!databaseUrl) {
+  console.warn("⚠️ DATABASE_URL is not set. Operating in fallback JSON datastore mode.");
 }
 
 export const pool = new Pool({
   connectionString: databaseUrl || "postgresql://localhost:5432/selam_kids",
   ssl: databaseUrl ? { rejectUnauthorized: false } : false,
   max: 10,
+  connectionTimeoutMillis: 45000,
+  idleTimeoutMillis: 30000,
+  statement_timeout: 45000,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
 });
 
-export function query(text, values) {
+pool.on("error", (err) => {
+  console.warn("⚠️ PostgreSQL background pool warning:", err.message);
+});
+
+export async function query(text, values) {
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is not configured.");
+  }
+  if (!isInitialized && !initPromise) {
+    connectPostgres().catch(() => {});
+  }
   return pool.query(text, values);
 }
 
@@ -37,8 +52,11 @@ function readJson(fileName) {
   }
 }
 
-export async function connectPostgres() {
-  await query(`
+let initPromise = null;
+let isInitialized = false;
+
+async function runSchemaMigrations() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       google_id TEXT UNIQUE,
@@ -57,6 +75,10 @@ export async function connectPostgres() {
     );
     ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'Kid';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'Email';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_disabled BOOLEAN NOT NULL DEFAULT FALSE;
+
     CREATE TABLE IF NOT EXISTS magazines (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -77,6 +99,7 @@ export async function connectPostgres() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     ALTER TABLE magazines ADD COLUMN IF NOT EXISTS price_cents INTEGER NOT NULL DEFAULT 5000;
+
     CREATE TABLE IF NOT EXISTS banners (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -89,6 +112,7 @@ export async function connectPostgres() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     ALTER TABLE banners ADD COLUMN IF NOT EXISTS magazine_id TEXT;
+
     CREATE TABLE IF NOT EXISTS feedback (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL,
@@ -100,9 +124,7 @@ export async function connectPostgres() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN NOT NULL DEFAULT FALSE;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'Email';
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_disabled BOOLEAN NOT NULL DEFAULT FALSE;
+
     CREATE TABLE IF NOT EXISTS activity_logs (
       id TEXT PRIMARY KEY,
       user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
@@ -114,6 +136,7 @@ export async function connectPostgres() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs (created_at DESC);
+
     CREATE TABLE IF NOT EXISTS magazine_sales (
       id TEXT PRIMARY KEY,
       magazine_id TEXT REFERENCES magazines(id) ON DELETE SET NULL,
@@ -121,6 +144,7 @@ export async function connectPostgres() {
       amount_cents INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
       user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
@@ -136,6 +160,7 @@ export async function connectPostgres() {
     );
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders (user_id);
     CREATE INDEX IF NOT EXISTS idx_orders_status ON orders (status);
+
     CREATE TABLE IF NOT EXISTS payments (
       id TEXT PRIMARY KEY,
       order_id TEXT REFERENCES orders(id) ON DELETE SET NULL,
@@ -163,74 +188,125 @@ export async function connectPostgres() {
     CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments (order_id);
     CREATE INDEX IF NOT EXISTS idx_payments_status ON payments (status);
   `);
+}
 
-  // This makes it possible to designate the first super administrator without
-  // exposing a public privilege-escalation route. Set SUPERADMIN_EMAIL in env.
-  if (process.env.SUPERADMIN_EMAIL) {
-    const emails = process.env.SUPERADMIN_EMAIL.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-    for (const email of emails) {
-      await query(
-        "UPDATE users SET is_admin = TRUE, is_super_admin = TRUE, role = 'Super Admin' WHERE LOWER(email) = $1",
-        [email],
-      );
-    }
+export async function connectPostgres() {
+  if (isInitialized) return pool;
+  if (!databaseUrl) {
+    console.warn("⚠️ DATABASE_URL is not configured. Skipping PostgreSQL initialization.");
+    isInitialized = true;
+    return null;
   }
+  if (initPromise) return initPromise;
 
-  const [{ rows: bannerCount }, { rows: magazineCount }] = await Promise.all([
-    query("SELECT COUNT(*)::int AS count FROM banners"),
-    query("SELECT COUNT(*)::int AS count FROM magazines"),
-  ]);
+  initPromise = (async () => {
+    // 1. Connection probe with retries to handle cold server starts
+    let connected = false;
+    let lastError = null;
+    const maxRetries = 2;
 
-  if (bannerCount[0].count === 0) {
-    for (const banner of readJson("banners.json")) {
-      await query(
-        `INSERT INTO banners (id, title, kicker, image_url, magazine_id, active, display_order, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`,
-        [
-          banner._id,
-          banner.title,
-          banner.kicker ?? "",
-          banner.imageUrl ?? "",
-          banner.magazineId ?? null,
-          banner.active !== false,
-          Number(banner.order ?? 0),
-          banner.createdAt || new Date(),
-        ],
-      );
+    for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
+      try {
+        await pool.query("SELECT 1");
+        connected = true;
+        break;
+      } catch (err) {
+        lastError = err;
+        if (attempt <= maxRetries) {
+          console.log(`⏳ Connecting to PostgreSQL (attempt ${attempt}/${maxRetries + 1})... retrying in 2s`);
+          await new Promise((r) => setTimeout(r, 2000));
+        }
+      }
     }
-  }
 
-  if (magazineCount[0].count === 0) {
-    for (const magazine of readJson("magazines.json")) {
-      await query(
-        `INSERT INTO magazines
-          (id, title, description, cover_url, minutes, likes, edition, category, date, paragraphs, fun_fact, target_url, story_images, price_cents, active, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13::jsonb, $14, $15, $16)
-         ON CONFLICT (id) DO NOTHING`,
-        [
-          magazine._id,
-          magazine.title,
-          magazine.description ?? "",
-          magazine.coverUrl ?? "",
-          Number(magazine.minutes ?? 5),
-          Number(magazine.likes ?? 0),
-          magazine.edition ?? "New Edition",
-          magazine.category ?? "Magazine",
-          magazine.date ?? "",
-          JSON.stringify(magazine.paragraphs ?? []),
-          magazine.funFact ?? "",
-          magazine.targetUrl ?? "",
-          JSON.stringify(magazine.storyImages ?? []),
-          Number(magazine.priceCents ?? magazine.price ?? 5000),
-          magazine.active !== false,
-          magazine.createdAt || new Date(),
-        ],
-      );
+    if (!connected) {
+      throw lastError || new Error("Failed to connect to PostgreSQL");
     }
-  }
 
-  console.log("✅ PostgreSQL connected");
-  return pool;
+    // 2. Fast check: Only run DDL migrations if schema doesn't exist yet
+    const tableCheck = await pool.query(
+      "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users' LIMIT 1"
+    );
+
+    if (tableCheck.rowCount === 0) {
+      await runSchemaMigrations();
+    }
+
+    // Designate superadmin if configured in environment
+    if (process.env.SUPERADMIN_EMAIL) {
+      const emails = process.env.SUPERADMIN_EMAIL.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+      for (const email of emails) {
+        await pool.query(
+          "UPDATE users SET is_admin = TRUE, is_super_admin = TRUE, role = 'Super Admin' WHERE LOWER(email) = $1",
+          [email],
+        );
+      }
+    }
+
+    // Seed banners and magazines only if empty
+    const [{ rows: bannerCount }, { rows: magazineCount }] = await Promise.all([
+      pool.query("SELECT COUNT(*)::int AS count FROM banners"),
+      pool.query("SELECT COUNT(*)::int AS count FROM magazines"),
+    ]);
+
+    if (bannerCount[0].count === 0) {
+      for (const banner of readJson("banners.json")) {
+        await pool.query(
+          `INSERT INTO banners (id, title, kicker, image_url, magazine_id, active, display_order, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`,
+          [
+            banner._id,
+            banner.title,
+            banner.kicker ?? "",
+            banner.imageUrl ?? "",
+            banner.magazineId ?? null,
+            banner.active !== false,
+            Number(banner.order ?? 0),
+            banner.createdAt || new Date(),
+          ],
+        );
+      }
+    }
+
+    if (magazineCount[0].count === 0) {
+      for (const magazine of readJson("magazines.json")) {
+        await pool.query(
+          `INSERT INTO magazines
+            (id, title, description, cover_url, minutes, likes, edition, category, date, paragraphs, fun_fact, target_url, story_images, price_cents, active, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13::jsonb, $14, $15, $16)
+           ON CONFLICT (id) DO NOTHING`,
+          [
+            magazine._id,
+            magazine.title,
+            magazine.description ?? "",
+            magazine.coverUrl ?? "",
+            Number(magazine.minutes ?? 5),
+            Number(magazine.likes ?? 0),
+            magazine.edition ?? "New Edition",
+            magazine.category ?? "Magazine",
+            magazine.date ?? "",
+            JSON.stringify(magazine.paragraphs ?? []),
+            magazine.funFact ?? "",
+            magazine.targetUrl ?? "",
+            JSON.stringify(magazine.storyImages ?? []),
+            Number(magazine.priceCents ?? magazine.price ?? 5000),
+            magazine.active !== false,
+            magazine.createdAt || new Date(),
+          ],
+        );
+      }
+    }
+
+    console.log("✅ PostgreSQL connected");
+    isInitialized = true;
+    return pool;
+  })().catch((err) => {
+    initPromise = null;
+    console.warn("⚠️ PostgreSQL connection/initialization warning:", err.message);
+    return null;
+  });
+
+  return initPromise;
 }
 
 export async function closePostgres() {
