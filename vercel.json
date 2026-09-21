@@ -2,12 +2,12 @@
   "version": 2,
   "buildCommand": "npm run build",
   "functions": {
-    "backend/api/handler.js": {
+    "api/**/*.js": {
       "maxDuration": 30
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/backend/api/handler.js" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

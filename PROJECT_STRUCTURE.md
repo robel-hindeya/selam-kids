@@ -9,6 +9,10 @@ This document outlines the international enterprise directory architecture, arch
 
 ```
 selam-kids/
+├── api/                        # Vercel Serverless Function Gateway (mandated by Vercel)
+│   ├── [...path].js            # Wildcard forwarder to Express API handler
+│   └── index.js                # Root /api endpoint forwarder to backend handler
+│
 ├── backend/                    # Core Backend Service (Node.js, Express, PostgreSQL)
 │   ├── api/                    # Serverless Cloud Adapter (Vercel / Cloud Functions)
 │   │   └── handler.js          # Serverless entry point wrapping Express app with DB pooling
